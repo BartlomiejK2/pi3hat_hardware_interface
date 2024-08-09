@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g -shared -Wl,-soname,libimu_transform.so -o libimu_transform.so CMakeFiles/imu_transform.dir/src/imu_transform/IMUTransform.cpp.o 

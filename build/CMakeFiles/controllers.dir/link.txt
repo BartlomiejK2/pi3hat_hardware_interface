@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g -shared -Wl,-soname,libcontrollers.so -o libcontrollers.so CMakeFiles/controllers.dir/src/controllers/ControllerBridge.cpp.o CMakeFiles/controllers.dir/src/controllers/wrappers/ControllerWrapper.cpp.o CMakeFiles/controllers.dir/src/controllers/wrappers/MoteusWrapper.cpp.o 

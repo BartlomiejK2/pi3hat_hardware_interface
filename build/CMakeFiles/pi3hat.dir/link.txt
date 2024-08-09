@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g -shared -Wl,-soname,libpi3hat.so -o libpi3hat.so CMakeFiles/pi3hat.dir/include/3rd_libs/pi3hat/pi3hat.cc.o 
