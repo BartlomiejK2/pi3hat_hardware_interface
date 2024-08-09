@@ -137,5 +137,29 @@ colcon build --packages-select pi3hat_hardware_interface
 `motor_velocity_max` - Motor maximal velocity [radians]\
 `motor_torque_max' - Motor maximal torque [Nm]
 
+## Testing 
+
+### Testing controller bridges:
+1. Go to `test/controllers`
+2. Choose controller type directory
+3. Compile tests:
+```bash
+bash "type"_tests_compile.sh
+```
+4. Run tests:
+```bash
+sudo simple_"type"_test
+sudo single_"type"_test
+sudo double_"type"_test
+```
+### Testing hardware interface
+1. Create or use existing `.xml` file for hardware interface in `urdf/`.
+2. Create or use existing `.yaml` file for controllers in `bringup/config`.
+3. Create or use existing launchfile in `bringup/launch`.
+4. Build project.
+5. ```bash
+   ros2 launch pi3hat_hardware_interface "your_test".launch.py
+   ```
+
 ## Troubleshooting
 #### Check out Gabrael Levine [Troubleshooting](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main?tab=readme-ov-file#troubleshooting). 
