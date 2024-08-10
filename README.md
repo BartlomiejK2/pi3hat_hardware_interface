@@ -12,23 +12,23 @@ for inspiration and making this work much more easy!
 `FourBarLinkageTransmission` and `DifferentialTransmission`)
 - :ballot_box_with_check: Simple transformation for IMU (z axis now points "up")
 - :ballot_box_with_check: 3 command interfaces:
-  - position [radians]
-  - velocity [radians/s]
-  - effort [Nm]
+  - position [`radians]`
+  - velocity [`radians/s`]
+  - effort [`Nm`]
 - :ballot_box_with_check: 4 state interfaces:
-  -  position [radians/s]
-  -  velocity [radians/s]
-  -  effort [Nm]
-  -  temperature [Celcius]
+  -  position [`radians/s`]
+  -  velocity [`radians/s`]
+  -  effort [`Nm`]
+  -  temperature [`Celcius`]
 
-#### :warning: IMPORTANT: User don't have to set up every interface in `xml` file, but remeber to set up your controller accordingly e.g. in order to control velocity in Moteus controller, u need to set up `kp` coefficient to 0.0. 
+#### :warning: IMPORTANT: User don't have to set up every command or state interface in `xml` file, but remeber to set up your controller accordingly e.g. in order to control velocity in `moteus` controller, u need to set up `kp` coefficient to 0.0. 
 
 ## Hardware
 - Raspberry Pi 4 (more RAM the better)
 - pi3hat 
   
 ## Operating System
-- [Ubuntu 22.04 with real-time kernel](https://github.com/ros-realtime/ros-realtime-rpi4-image/releases/tag/22.04.3_v5.15.98-rt62-raspi_ros2_humble).
+- [Ubuntu 22.04 with real-time kernel](https://github.com/ros-realtime/ros-realtime-rpi4-image/releases/tag/22.04.3_v5.15.98-rt62-raspi_ros2_humble)
 
 ## Dependencies (all for humble)
 - [ros2_control](https://github.com/ros-controls/ros2_control)
@@ -89,11 +89,11 @@ colcon build --packages-select pi3hat_hardware_interface
   ...
 </ros2_control>
 ```
-`imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [degrees]\
-`imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [Hz]\
-`can_X_fdcan_frame` - Using FDCAN frame in X CAN bus [bool]\
-`can_X_automatic_retransmission` - Using automatic retransmission in X CAN bus [bool]\
-`can_X_bitrate_switch` - Using bitrate switch in X CAN bus [bool]\
+`imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [`degrees`]\
+`imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [`Hz`]\
+`can_X_fdcan_frame` - Using FDCAN frame in X CAN bus [`bool`]\
+`can_X_automatic_retransmission` - Using automatic retransmission in X CAN bus [`bool`]\
+`can_X_bitrate_switch` - Using bitrate switch in X CAN bus [`bool`]
 
 ### Controller/Motor options:
 
@@ -127,19 +127,19 @@ colcon build --packages-select pi3hat_hardware_interface
 #### Controller:
 `controller_type` - Type of controller (now only moteus supported)\
 `controller_can_bus` - CAN bus which controller is connected\
-`controller_id` - Controller id\
+`controller_id` - Controller Id
 #### :warning: IMPORTANT: EVERY CONTROLLER NEEDS DIFFRENT ID
 
 #### Motor (not joint):
 `motor_direction` - Motor direction (1 or -1)\
-`motor_position_offset` - Motor position offset, will be added to commanded position before sending to controller [radians]\
-`motor_position_max/min` - Motor max/min position [radians]\
-`motor_velocity_max` - Motor maximal velocity [radians]\
-`motor_torque_max' - Motor maximal torque [Nm]
+`motor_position_offset` - Motor position offset, will be added to commanded position before sending to controller [`radians`]\
+`motor_position_max/min` - Motor max/min position [`radians`]\
+`motor_velocity_max` - Motor maximal velocity [`radians`]\
+`motor_torque_max` - Motor maximal torque [`Nm`]
 
 ## Testing 
 
-### Testing controller bridges:
+### Testing controller wrappers:
 1. Go to `test/controllers`
 2. Choose controller type directory
 3. Compile tests:
@@ -153,13 +153,38 @@ sudo single_"type"_test
 sudo double_"type"_test
 ```
 ### Testing hardware interface
-1. Create or use existing `.xml` file for hardware interface in `urdf/`.
-2. Create or use existing `.yaml` file for controllers in `bringup/config`.
-3. Create or use existing launchfile in `bringup/launch`.
-4. Build project.
-5. ```bash
-   ros2 launch pi3hat_hardware_interface "your_test".launch.py
-   ```
+1. Go to `test/urdf`
+2. Choose urdfs with your controller type
+3. Edit urdf with your options
+4. Build project
+5. Source project
+6. Run:
+```bash
+  ros2 launch pi3hat_hardware_interface test_"amount"_"type".launch.py
+```
 
 ## Troubleshooting
 #### Check out Gabrael Levine [Troubleshooting](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main?tab=readme-ov-file#troubleshooting). 
+
+## Contributing
+
+### Adding your controller
+1. Check `include/controllers/wrappers/MoteusWrapper.hpp` and `src/controllers/wrappers/MoteusWrapper.cpp`.
+2. Add third-party library to `include/3rd_libs/`.
+3. Add third-party party library to `CMakelist.txt` as `add_library` (like `pi3hat` and `moteus`).
+4. Create `"Type"Wrapper.hpp` file for your controller wrapper in `include/controllers/wrappers`.
+5. Add include path to `"Type"Wrapper.hpp` file in `include/controllers/Controllers.hpp`.
+6. Create `"Type"Wrapper.cpp` file with implementation in `src/controllers/wrappers`. 
+7. Add your `"Type"Wrapper.cpp` file to library `controllers` in `CMakelist.txt`.
+8. Go to `src/controllers/ControllerBridge.cpp`.
+9. Add `else if` with your controller type as `std::string` with construction of your wrapper inside.
+10. Add comments to your code (check other source and header files).
+11. Add wrapper tests for wrapper in `test/controllers/"type"` (check tests for `moteus`).
+12. Add tests for pi3hat with your wrapper in `test/urdf` and `test/bringup/launch` (check tests for `moteus`).
+14. Run all tests.
+15. Create pull request with your code. Write description of your changes.
+
+### Other changes
+1. Change code.
+2. Run all tests. 
+1. If all passed, create pull request with your code. Write description of your changes.
