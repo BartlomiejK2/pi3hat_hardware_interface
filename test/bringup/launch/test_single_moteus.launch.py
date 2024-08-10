@@ -32,7 +32,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("pi3hat_hardware_interface"),
                     "urdf",
-                    "test_double_motor.urdf.xacro",
+                    "test_single_moteus.urdf.xacro",
                 ]
             )
         ]
@@ -43,7 +43,7 @@ def generate_launch_description():
         [
             FindPackageShare("pi3hat_hardware_interface"),
             "config",
-            "test_double_motor.yaml",
+            "test_single_motor.yaml",
         ]
     )
 
