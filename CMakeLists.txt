@@ -57,6 +57,7 @@ target_compile_features(
 
 
 ## Custom controller bridge library
+## Here add your wrappers!
 add_library(controllers SHARED
   src/controllers/ControllerBridge.cpp
   src/controllers/wrappers/ControllerWrapper.cpp
@@ -125,16 +126,16 @@ install(
 )
 
 install(
-  DIRECTORY urdf
+  DIRECTORY test/urdf
   DESTINATION share/${PROJECT_NAME}
 )
-install(DIRECTORY
-  bringup/launch
+install(
+  DIRECTORY test/bringup/launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(DIRECTORY
-  bringup/config
+install(
+  DIRECTORY test/bringup/config
   DESTINATION share/${PROJECT_NAME}
 )
 
