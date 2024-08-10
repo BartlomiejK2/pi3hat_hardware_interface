@@ -4,7 +4,7 @@
          type="pi3hat_hardware_interface::Pi3HatHardwareInterface" 
          base_class_type="hardware_interface::SystemInterface">
     <description>
-      mjbots pi3hat interface by Bartlomiej Krajewski. Thanks to G-Levine for inspiration and open-source code
+      mjbots pi3hat interface by Bartlomiej Krajewski. Thanks to G-Levine for inspiration and making this work much more easier!
     </description>
   </class>
 
