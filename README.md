@@ -10,16 +10,20 @@ for inspiration and making this work much more easier!
 - :ballot_box_with_check: Different kinds of controllers (for making wrapper for your kind of controller check below)
 - :ballot_box_with_check: [Transmission interface](http://docs.ros.org/en/jade/api/transmission_interface/html/c++/classtransmission__interface_1_1Transmission.html) (`SimpleTransmission`,
 `FourBarLinkageTransmission` and `DifferentialTransmission`)
-- :ballot_box_with_check: Simple transformation for IMU (z axis now points "up")
-- :ballot_box_with_check: 3 command interfaces:
+- :ballot_box_with_check: Simple transformation for IMU (`z` axis now points "up")
+- :ballot_box_with_check: 3 joint command interfaces:
   - position [`radians]`
   - velocity [`radians/s`]
   - effort [`Nm`]
-- :ballot_box_with_check: 4 state interfaces:
+- :ballot_box_with_check: 4 joint state interfaces:
   -  position [`radians/s`]
   -  velocity [`radians/s`]
   -  effort [`Nm`]
   -  temperature [`Celcius`]
+- :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
+  - orientation (`x`, `y`, `z` and `w`)
+  - angular velocity (`x`, `y`, `z`) [`radians/s`]
+  - linear acceleration (`x`, `y`, `z`) [`m/s^2`]
 
 #### :warning: IMPORTANT: User don't have to set up every command or state interface in `xml` file, but remeber to set up your controller accordingly e.g. in order to control velocity in `moteus` controller, u need to set up `kp` coefficient to 0.0. 
 
