@@ -11,7 +11,7 @@
 /* Author: Bartłomiej Krajewski (https://github.com/BartlomiejK2) */
 
 
-#include "controllers/Controllers.hpp"
+#include "controllers/wrappers/MoteusWrapper.hpp"
 #include "3rd_libs/pi3hat/pi3hat.h"
 #include "3rd_libs/pi3hat/realtime.h"
 #include <iostream>
@@ -77,13 +77,16 @@ int main(int argc, char** argv)
     params_2.bus_ = 2;
     params_2.id_ = 2;
 
-    std::vector<pi3hat_controller_interface::ControllerBridge> controllers;
+    std::vector<pi3hat_controller_interface::MoteusWrapper> controllers;
     std::vector<pi3hat_controller_interface::ControllerCommand> controller_commands;
     std::vector<pi3hat_controller_interface::ControllerState> controller_states;
 
    
-    pi3hat_controller_interface::ControllerBridge controller_1("Moteus", params_1); 
-    pi3hat_controller_interface::ControllerBridge controller_2("Moteus", params_2); 
+    pi3hat_controller_interface::MoteusWrapper controller_1; 
+    pi3hat_controller_interface::MoteusWrapper controller_2;
+
+    controller_1.set_parameters(params_1);
+    controller_2.set_parameters(params_2);
 
     controllers.push_back(std::move(controller_1));
     controllers.push_back(std::move(controller_2));
@@ -104,7 +107,7 @@ int main(int argc, char** argv)
     // set stop to moteus
     for(int i = 0; i < controllers.size(); ++i)
     {
-        controllers[i].initialize(tx_frame[i]);
+        controllers[i].init_to_tx_frame(tx_frame[i]);
     }
     pi3hat_output = pi3hat.Cycle(input);
     ::usleep(10000);
@@ -112,7 +115,7 @@ int main(int argc, char** argv)
     for(int i = 0; i < controllers.size(); ++i)
     {
         controller_commands[i].position_ = 0;
-        controllers[i].make_command(tx_frame[i], controller_commands[i]);
+        controllers[i].command_to_tx_frame(tx_frame[i], controller_commands[i]);
     }
 
     controller_states[0].position_ = 10000;
@@ -124,7 +127,7 @@ int main(int argc, char** argv)
         ::usleep(2000);
         for(int i = 0; i < controllers.size(); ++i)
         {
-            controllers[i].get_state(rx_frame[i], controller_states[i]);
+            controllers[i].rx_frame_to_state(rx_frame[i], controller_states[i]);
         }
     }
     std::cout << "Controllers successfully started!" << std::endl;
@@ -138,7 +141,7 @@ int main(int argc, char** argv)
         controller_commands[1].position_ = 10 * M_PI *sin(now - prev);
         for(int i = 0; i < controllers.size(); ++i)
         {
-            controllers[i].make_command(tx_frame[i], controller_commands[i]);
+            controllers[i].command_to_tx_frame(tx_frame[i], controller_commands[i]);
         }
         pi3hat_output = pi3hat.Cycle(input);
         ::usleep(500);
@@ -146,7 +149,7 @@ int main(int argc, char** argv)
         frequency = (int) 1/mesaure_time;
         for(int i = 0; i < controllers.size(); ++i)
         {
-            controllers[i].get_state(rx_frame[i], controller_states[i]);
+            controllers[i].rx_frame_to_state(rx_frame[i], controller_states[i]);
         }
         ::printf("f = %d\n pos_1_command = %7.3f, pos_1_state = %7.3f)\n pos_2_command = %7.3f, pos_2_state = %7.3f)\r",
         frequency, controller_commands[0].position_, controller_states[0].position_, controller_commands[1].position_, controller_states[1].position_);

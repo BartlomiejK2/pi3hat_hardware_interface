@@ -11,7 +11,7 @@
 /* Author: Bartłomiej Krajewski (https://github.com/BartlomiejK2) */
 
 
-#include "controllers/Controllers.hpp"
+#include "controllers/wrappers/MoteusWrapper.hpp"
 #include "3rd_libs/pi3hat/pi3hat.h"
 #include "3rd_libs/pi3hat/realtime.h"
 #include <iostream>
@@ -64,7 +64,8 @@ int main(int argc, char** argv)
     params.bus_ = 1;
     params.id_ = 1;
 
-    pi3hat_controller_interface::ControllerBridge controller("Moteus", params);
+    pi3hat_controller_interface::MoteusWrapper controller;
+    controller.set_parameters(params);
 
 
     pi3hat_controller_interface::ControllerCommand controller_command;
@@ -80,7 +81,7 @@ int main(int argc, char** argv)
     std::cout << "Realtime control activated!" << std::endl;
 
     // set stop to moteus
-    controller.initialize(tx_frame);
+    controller.init_to_tx_frame(tx_frame);
     pi3hat_output = pi3hat.Cycle(input);
     ::usleep(10000);
     
@@ -88,10 +89,10 @@ int main(int argc, char** argv)
     controller_state.position_ = 100000;
     while(std::abs(controller_state.position_) > 0.1)
     {
-        controller.make_command(tx_frame, controller_command);
+        controller.command_to_tx_frame(tx_frame, controller_command);
         pi3hat_output = pi3hat.Cycle(input);
         ::usleep(2000);
-        controller.get_state(rx_frame, controller_state);
+        controller.rx_frame_to_state(rx_frame, controller_state);
     }
 
     std::cout << "Controller successfully started!" << std::endl;
@@ -102,12 +103,12 @@ int main(int argc, char** argv)
     {   
         auto now = GetNow();
         controller_command.position_ = 5 * sin(now - prev);
-        controller.make_command(tx_frame, controller_command);
+        controller.command_to_tx_frame(tx_frame, controller_command);
         pi3hat_output = pi3hat.Cycle(input);
         ::usleep(1000);
         auto mesaure_time = GetNow() - now;
         frequency = (int) 1/mesaure_time;
-        controller.get_state(rx_frame, controller_state);
+        controller.rx_frame_to_state(rx_frame, controller_state);
         ::printf("f, pos_c, pos_s=(%d, %7.3f, %7.3f)\r",
         frequency, controller_command.position_, controller_state.position_);
         ::fflush(::stdout);
