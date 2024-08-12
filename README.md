@@ -7,7 +7,7 @@ Huge thanks to [Gabrael Levine](https://github.com/G-Levine) and his version of 
 for inspiration and making this work much more easier!
 
 ### Software supports:
-- :ballot_box_with_check: Different kinds of controllers (for making wrapper for your kind of controller check below)
+- :ballot_box_with_check: [Moteus](https://mjbots.com/products/moteus-r4-11) (for adding your controller check below)
 - :ballot_box_with_check: [Transmission interface](http://docs.ros.org/en/jade/api/transmission_interface/html/c++/classtransmission__interface_1_1Transmission.html) (`SimpleTransmission`,
 `FourBarLinkageTransmission` and `DifferentialTransmission`)
 - :ballot_box_with_check: Simple transformation for IMU (`z` axis now points "up")
@@ -132,7 +132,7 @@ colcon build --packages-select pi3hat_hardware_interface
 `controller_type` - Type of controller (now only moteus supported)\
 `controller_can_bus` - CAN bus which controller is connected\
 `controller_id` - Controller Id
-#### :warning: IMPORTANT: EVERY CONTROLLER NEEDS DIFFRENT ID
+#### :warning: IMPORTANT: All controller id's must be unique.
 
 #### Motor (not joint):
 `motor_direction` - Motor direction (1 or -1)\
@@ -179,14 +179,16 @@ sudo double_"type"_test
 4. Create `"Type"Wrapper.hpp` file for your controller wrapper in `include/controllers/wrappers`.
 5. Add include path to `"Type"Wrapper.hpp` file in `include/controllers/Controllers.hpp`.
 6. Create `"Type"Wrapper.cpp` file with implementation in `src/controllers/wrappers`. 
-7. Add your `"Type"Wrapper.cpp` file to library `controllers` in `CMakelist.txt`.
-8. Go to `src/controllers/ControllerBridge.cpp`.
-9. Add `else if` with your controller type as `std::string` with construction of your wrapper inside.
-10. Add comments to your code (check other source and header files).
-11. Add wrapper tests for wrapper in `test/controllers/"type"` (check tests for `moteus`).
-12. Add tests for pi3hat with your wrapper in `test/urdf` and `test/bringup/launch` (check tests for `moteus`).
-14. Run all tests.
-15. Create pull request with your code. Write description of your changes.
+7. Export your wrapper as `pluginlib` class.
+8. Add your plugin in `controller_wrapppers.xml`.
+9. Add comments to your code (check other source and header files).
+10. Add wrapper tests for wrapper in `test/controllers/"type"` (check tests for `moteus`).
+11. Add tests for pi3hat with your wrapper in `test/urdf` and `test/bringup/launch` (check tests for `moteus`).
+12. Run all tests.
+13. Create pull request with your code. Write description of your changes.
+
+#### :warning: IMPORTANT: value for `controller_type` parameter must be `"Type"` (like in `"Type"Wrapper`).
+#### :warning: IMPORTANT: To test wrappers seperately, comment plugin stuff before compiling. 
 
 ### Other changes
 1. Change code.
