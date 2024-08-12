@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     mjbots::pi3hat::Pi3Hat::Output pi3hat_output;
 
     // moteus wrapper
-    controller_interface::ControllerParameters params;
+    pi3hat_controller_interface::ControllerParameters params;
     params.direction_ = 1;
     params.position_max_ = 10;
     params.position_min_ = -10;
@@ -81,14 +81,14 @@ int main(int argc, char** argv)
     moteus_command.maximum_torque = params.torque_max_;
     moteus_command.velocity_limit = params.velocity_max_;
 
-    controller_interface::ControllerBridge controller("moteus", params);
+    pi3hat_controller_interface::ControllerBridge controller("moteus", params);
 
 
-    controller_interface::ControllerCommand controller_command;
+    pi3hat_controller_interface::ControllerCommand controller_command;
     controller_command.velocity_ = 0;
     controller_command.torque_ = 0;
 
-    controller_interface::ControllerState controller_state;
+    pi3hat_controller_interface::ControllerState controller_state;
 
     std::cout << "Options for controller succesfully initialized!" << std::endl;
 

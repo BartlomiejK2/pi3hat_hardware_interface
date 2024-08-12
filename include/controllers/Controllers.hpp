@@ -16,6 +16,6 @@
 
 #include "ControllerBridge.hpp"
 #include "ControllerStructures.hpp"
-#include "wrappers/WrappersTypes.hpp"
+#include "wrappers/ControllerWrapper.hpp"
 
 #endif

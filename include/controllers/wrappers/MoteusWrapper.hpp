@@ -18,7 +18,7 @@
 #include "3rd_libs/moteus/moteus.h"
 #include <memory>
 
-namespace controller_interface
+namespace pi3hat_controller_interface
 {
 
 class MoteusWrapper final: public ControllerWrapper 
@@ -31,14 +31,13 @@ class MoteusWrapper final: public ControllerWrapper
 
     /* Command structure for moteus object*/
     mjbots::moteus::PositionMode::Command position_command_;
-    mjbots::moteus::Controller moteus_controller_;
+    std::unique_ptr<mjbots::moteus::Controller> moteus_controller_;
     
     public:
     using CanFrame = mjbots::pi3hat::CanFrame;
 
-    MoteusWrapper( 
-        const mjbots::moteus::Controller::Options& options,
-        const mjbots::moteus::PositionMode::Command& command);
+
+    void set_parameters(const ControllerParameters& params) override;
     void command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) override;
     void query_to_tx_frame(CanFrame& tx_frame) override;
     void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) override;
@@ -46,10 +45,6 @@ class MoteusWrapper final: public ControllerWrapper
     int get_id_from_rx_frame(const CanFrame& rx_frame) override;
 
 };
-
-/* Copying for Moteus class is deleted, prevents from making constructor for MoteusWrapper 
-   with only ControllerParameter as argument :/ */
-std::unique_ptr<MoteusWrapper> make_moteus_wrapper(const ControllerParameters& params);
 
 };
 

@@ -13,82 +13,13 @@
 
 #include "controllers/wrappers/MoteusWrapper.hpp"
 
-using namespace controller_interface;
+using namespace pi3hat_controller_interface;
 
-MoteusWrapper::MoteusWrapper(
-        const mjbots::moteus::Controller::Options& options,
-        const mjbots::moteus::PositionMode::Command& command):
-
-        ControllerWrapper(), 
-        position_command_(command),
-        moteus_controller_(mjbots::moteus::Controller(options)) {} 
-
-
-void MoteusWrapper::command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) 
-{
-    /* Change command values */
-    position_command_.position = command.position_ * radians_to_rotation_;
-    position_command_.velocity = command.velocity_ * radians_to_rotation_;
-    position_command_.feedforward_torque = command.torque_;
-
-    /* Create CANFD frame */
-    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_.MakePosition(position_command_);
-    
-    /* Copy data from CANFD frame to CAN frame */
-    tx_frame.id = can_fd_frame.arbitration_id;
-    tx_frame.bus = can_fd_frame.bus;
-    tx_frame.size = can_fd_frame.size;
-    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
-}
-
-void MoteusWrapper::query_to_tx_frame(CanFrame& tx_frame)
-{
-    /* Create CANFD frame */
-    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_.MakeQuery();
-    
-    /* Copy data from CANFD frame to TX CANFD Pi3hat frame */
-    tx_frame.id = can_fd_frame.arbitration_id;
-    tx_frame.bus = can_fd_frame.bus;
-    tx_frame.size = can_fd_frame.size;
-    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
-}
-
-void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) 
-{
-    /* Parse data from RX CANFD Pi3hat frame to Result object */
-    if(((rx_frame.id >> 8) & 0x7f) != (uint32_t) moteus_controller_.options().id) return; /* This should not happen! (map frame to wrapper first) */
-
-    mjbots::moteus::Query::Result result = mjbots::moteus::Query::Parse(rx_frame.data, rx_frame.size);
-    state.position_ = result.position * rotation_to_radians_;
-    state.velocity_ = result.velocity * rotation_to_radians_;
-    state.torque_ = result.torque;
-    state.temperature_ = result.temperature;
-    state.fault = result.fault;
-}
-
-void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame) 
-{
-    /* create CANFD frame*/
-    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_.MakeStop();
-
-    /* Copy data from CANFD frame to TX CAN Pi3hat frame */
-    tx_frame.id = can_fd_frame.arbitration_id;
-    tx_frame.bus = can_fd_frame.bus;
-    tx_frame.size = can_fd_frame.size;
-    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
-}
-
-int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
-{
-    /* Get real motor if from RX CAN Pi3hat frame */
-    return ((rx_frame.id>> 8) & 0x7f);
-}
-
-std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const ControllerParameters& params)
+void MoteusWrapper::set_parameters(const ControllerParameters& params)
 {
     /* Moteus options */ 
     using mjbots::moteus::Controller;
-    using controller_interface::MoteusWrapper;
+    using pi3hat_controller_interface::MoteusWrapper;
     Controller::Options moteus_options;
     moteus_options.bus = params.bus_;
     moteus_options.id = params.id_;
@@ -105,7 +36,69 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     moteus_command.maximum_torque = params.torque_max_;
     //moteus_command.velocity_limit = params.velocity_max_; // Creates error, check later
 
-    controller_interface::MoteusWrapper moteus_wrapper(moteus_options, moteus_command);
-    std::unique_ptr<controller_interface::MoteusWrapper> moteus_wrapper_ptr = std::make_unique<controller_interface::MoteusWrapper>(moteus_wrapper);
-    return moteus_wrapper_ptr;
+    moteus_controller_ = std::make_unique<mjbots::moteus::Controller>(moteus_options);
 }
+
+void MoteusWrapper::command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) 
+{
+    /* Change command values */
+    position_command_.position = command.position_ * radians_to_rotation_;
+    position_command_.velocity = command.velocity_ * radians_to_rotation_;
+    position_command_.feedforward_torque = command.torque_;
+
+    /* Create CANFD frame */
+    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_->MakePosition(position_command_);
+    
+    /* Copy data from CANFD frame to CAN frame */
+    tx_frame.id = can_fd_frame.arbitration_id;
+    tx_frame.bus = can_fd_frame.bus;
+    tx_frame.size = can_fd_frame.size;
+    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
+}
+
+void MoteusWrapper::query_to_tx_frame(CanFrame& tx_frame)
+{
+    /* Create CANFD frame */
+    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_->MakeQuery();
+    
+    /* Copy data from CANFD frame to TX CANFD Pi3hat frame */
+    tx_frame.id = can_fd_frame.arbitration_id;
+    tx_frame.bus = can_fd_frame.bus;
+    tx_frame.size = can_fd_frame.size;
+    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
+}
+
+void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) 
+{
+    /* Parse data from RX CANFD Pi3hat frame to Result object */
+    if(((rx_frame.id >> 8) & 0x7f) != (uint32_t) moteus_controller_->options().id) return; /* This should not happen! (map frame to wrapper first) */
+
+    mjbots::moteus::Query::Result result = mjbots::moteus::Query::Parse(rx_frame.data, rx_frame.size);
+    state.position_ = result.position * rotation_to_radians_;
+    state.velocity_ = result.velocity * rotation_to_radians_;
+    state.torque_ = result.torque;
+    state.temperature_ = result.temperature;
+    state.fault = result.fault;
+}
+
+void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame) 
+{
+    /* create CANFD frame*/
+    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_->MakeStop();
+
+    /* Copy data from CANFD frame to TX CAN Pi3hat frame */
+    tx_frame.id = can_fd_frame.arbitration_id;
+    tx_frame.bus = can_fd_frame.bus;
+    tx_frame.size = can_fd_frame.size;
+    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
+}
+
+int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
+{
+    /* Get real motor if from RX CAN Pi3hat frame */
+    return ((rx_frame.id>> 8) & 0x7f);
+}
+
+#include "pluginlib/class_list_macros.hpp"
+
+PLUGINLIB_EXPORT_CLASS(pi3hat_controller_interface::MoteusWrapper, pi3hat_controller_interface::ControllerWrapper)

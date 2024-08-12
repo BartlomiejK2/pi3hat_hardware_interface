@@ -14,4 +14,4 @@
 #include "controllers/wrappers/ControllerWrapper.hpp"
 
 
-using namespace controller_interface;
+using namespace pi3hat_controller_interface;

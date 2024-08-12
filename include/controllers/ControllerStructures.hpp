@@ -14,7 +14,7 @@
 #ifndef _CONTROLLER_STRUCTURES_HPP_
 #define _CONTROLLER_STRUCTURES_HPP_
 
-namespace controller_interface
+namespace pi3hat_controller_interface
 {
 
 /* Structure for basic actuator command */

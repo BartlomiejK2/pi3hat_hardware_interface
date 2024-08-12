@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     mjbots::pi3hat::Pi3Hat::Output pi3hat_output;
 
     // moteus wrapper
-    controller_interface::ControllerParameters params_1;
+    pi3hat_controller_interface::ControllerParameters params_1;
     params_1.direction_ = 1;
     params_1.position_max_ = 30 * M_PI;
     params_1.position_min_ = -30 * M_PI;
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     params_1.bus_ = 1;
     params_1.id_ = 1;
 
-    controller_interface::ControllerParameters params_2;
+    pi3hat_controller_interface::ControllerParameters params_2;
     params_2.direction_ = 1;
     params_2.position_max_ = 10 * M_PI;
     params_2.position_min_ = -10 * M_PI;
@@ -104,22 +104,22 @@ int main(int argc, char** argv)
     moteus_2_command.velocity_limit = params_2.velocity_max_;
 
 
-    std::vector<controller_interface::ControllerBridge> controllers;
-    std::vector<controller_interface::ControllerCommand> controller_commands;
-    std::vector<controller_interface::ControllerState> controller_states;
+    std::vector<pi3hat_controller_interface::ControllerBridge> controllers;
+    std::vector<pi3hat_controller_interface::ControllerCommand> controller_commands;
+    std::vector<pi3hat_controller_interface::ControllerState> controller_states;
 
    
-    controller_interface::ControllerBridge controller_1("moteus", params_1); 
-    controller_interface::ControllerBridge controller_2("moteus", params_2); 
+    pi3hat_controller_interface::ControllerBridge controller_1("moteus", params_1); 
+    pi3hat_controller_interface::ControllerBridge controller_2("moteus", params_2); 
 
     controllers.push_back(std::move(controller_1));
     controllers.push_back(std::move(controller_2));
     
-    controller_commands.push_back(controller_interface::ControllerCommand());
-    controller_commands.push_back(controller_interface::ControllerCommand());
+    controller_commands.push_back(pi3hat_controller_interface::ControllerCommand());
+    controller_commands.push_back(pi3hat_controller_interface::ControllerCommand());
     
-    controller_states.push_back(controller_interface::ControllerState());
-    controller_states.push_back(controller_interface::ControllerState());
+    controller_states.push_back(pi3hat_controller_interface::ControllerState());
+    controller_states.push_back(pi3hat_controller_interface::ControllerState());
 
 
     std::cout << "Options for controllers succesfully initialized!" << std::endl;

@@ -14,7 +14,7 @@
 #include "pi3hat_hardware_interface/pi3hat_hardware_interface.hpp"
 
 using namespace pi3hat_hardware_interface;
-using namespace controller_interface;
+using namespace pi3hat_controller_interface;
 
 /* MAIN FUNCTIONS */
 
@@ -43,7 +43,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     /* Prepare controller bridges */
     for (const hardware_interface::ComponentInfo &joint : info_.joints)
     {
-        controller_interface::ControllerParameters params;
+        pi3hat_controller_interface::ControllerParameters params;
         std::string wrapper_type;
         try
         {
@@ -52,7 +52,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
         }
         catch(const std::exception& e)
         {
-            RCLCPP_FATAL(*logger_, "Error reading motor/controller parameters!");
+            RCLCPP_FATAL(*logger_, "Error reading motor/controller parameters: %s", e.what());
             return hardware_interface::CallbackReturn::ERROR;
         }
 
@@ -63,7 +63,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
         }
         catch(const std::exception& e)
         {
-            RCLCPP_FATAL(*logger_, "Error creating motor controller!");
+            RCLCPP_FATAL(*logger_, "Error creating motor controller: %s", e.what());
             return hardware_interface::CallbackReturn::ERROR;
         }
     }

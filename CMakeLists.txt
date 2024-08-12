@@ -60,8 +60,6 @@ target_compile_features(
 ## Here add your wrappers!
 add_library(controllers SHARED
   src/controllers/ControllerBridge.cpp
-  src/controllers/wrappers/ControllerWrapper.cpp
-  src/controllers/wrappers/MoteusWrapper.cpp
 )
 
 # add include directory
@@ -106,6 +104,9 @@ ament_target_dependencies(
 ## Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface pi3hat_hardware_interface.xml)
 
+## Export controller plugins
+pluginlib_export_plugin_description_file(pi3hat_hardware_interface controller_wrappers.xml)
+
 
 ## Install
 install(TARGETS 
@@ -123,6 +124,11 @@ install(TARGETS
 install(
   DIRECTORY include/${PROJECT_NAME}/
   DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY include/controllers/
+  DESTINATION include/controllers
 )
 
 install(

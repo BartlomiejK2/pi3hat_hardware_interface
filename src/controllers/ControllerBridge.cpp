@@ -13,7 +13,7 @@
 
 #include "controllers/ControllerBridge.hpp"
 
-using namespace controller_interface;
+using namespace pi3hat_controller_interface;
 using mjbots::pi3hat::CanFrame;
 
 
@@ -22,17 +22,18 @@ ControllerBridge::ControllerBridge(
      const ControllerParameters& params): 
      wrapper_(nullptr), params_(params)
 {
-    /* Here add your wrapper type as std::string (use "else if" after this "if") */
-    if(wrapper_type == "moteus")
+    pluginlib::ClassLoader<pi3hat_controller_interface::ControllerWrapper> wrapper_loader("pi3hat_controller_interface", "pi3hat_controller_interface::ControllerWrapper");
+
+    try
     {
-         wrapper_ = make_moteus_wrapper(params);
+        wrapper_ = std::move(std::unique_ptr<pi3hat_controller_interface::ControllerWrapper>(wrapper_loader.createUnmanagedInstance("pi3hat_controller_interface::" + wrapper_type + "Wrapper")));
+    }
+    catch(const std::exception& e)
+    {
+        throw;
     }
 
-    
-    else
-    {
-        throw std::invalid_argument("Wrong type of wrapper!");
-    }
+    wrapper_->set_parameters(params);
 }
      
 ControllerBridge::ControllerBridge(ControllerBridge&& other_controller):

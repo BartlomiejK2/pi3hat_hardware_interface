@@ -1,0 +1,5 @@
+<library path="pi3hat_controller_interface">
+  <class type="pi3hat_controller_interface::MoteusWrapper" base_class_type="pi3hat_controller_interface::ControllerWrapper">
+    <description>This is a plugin for moteus controller.</description>
+  </class>
+</library>

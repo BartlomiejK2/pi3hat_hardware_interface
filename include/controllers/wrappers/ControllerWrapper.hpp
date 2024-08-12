@@ -17,7 +17,7 @@
 #include "../ControllerStructures.hpp"
 #include "3rd_libs/pi3hat/pi3hat.h"
 
-namespace controller_interface
+namespace pi3hat_controller_interface
 {
 
 /* Interface class for wrapper that connects 3rd party lib for controller to connector 
@@ -26,6 +26,8 @@ class ControllerWrapper
 {
     protected:
     
+    ControllerWrapper()  = default;
+
     public:
     using CanFrame = mjbots::pi3hat::CanFrame;
 
@@ -36,6 +38,7 @@ class ControllerWrapper
     ControllerWrapper& operator=(ControllerWrapper&& other) = default;
 
 
+    virtual void set_parameters(const ControllerParameters& params) = 0;
     virtual void command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) = 0;
     virtual void query_to_tx_frame(CanFrame& tx_frame) = 0;
     virtual void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) = 0;

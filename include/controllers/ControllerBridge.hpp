@@ -14,14 +14,16 @@
 #ifndef _CONTROLLER_BRIDGE_HPP_
 #define _CONTROLLER_BRIDGE_HPP_
 
+#include <pluginlib/class_loader.hpp>
+
 #include "3rd_libs/pi3hat/pi3hat.h"
-#include "wrappers/WrappersTypes.hpp"
 #include "ControllerStructures.hpp"
+#include "wrappers/ControllerWrapper.hpp"
 #include <exception>
 #include <memory>
 #include <algorithm>
 
-namespace controller_interface
+namespace pi3hat_controller_interface
 {
 
 /* Class for abstracting communication with diffrent type of controllers. 

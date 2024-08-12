@@ -132,18 +132,18 @@ namespace pi3hat_hardware_interface
         std::unordered_map<int, int> controller_joint_map_;
 
         /* Controller states and commands */
-        std::vector<controller_interface::ControllerState> controller_states_;
-        std::vector<controller_interface::ControllerCommand> controller_commands_;
+        std::vector<pi3hat_controller_interface::ControllerState> controller_states_;
+        std::vector<pi3hat_controller_interface::ControllerCommand> controller_commands_;
 
         /* For transmission interface */
-        std::vector<controller_interface::ControllerCommand> controller_transmission_passthrough_;
+        std::vector<pi3hat_controller_interface::ControllerCommand> controller_transmission_passthrough_;
          
         /* Controller Bridges */
-        std::vector<controller_interface::ControllerBridge> controller_bridges_;
+        std::vector<pi3hat_controller_interface::ControllerBridge> controller_bridges_;
 
 
-        using JointState = controller_interface::ControllerState;
-        using JointCommand = controller_interface::ControllerCommand;
+        using JointState = pi3hat_controller_interface::ControllerState;
+        using JointCommand = pi3hat_controller_interface::ControllerCommand;
 
         /* Joint states and commands (for transmissions)*/
         std::vector<JointState> joint_states_;
@@ -154,7 +154,7 @@ namespace pi3hat_hardware_interface
 
 
         /* FUNCTION FOR INITIALIZATION */
-        controller_interface::ControllerParameters get_controller_parameters(const hardware_interface::ComponentInfo& joint_info);
+        pi3hat_controller_interface::ControllerParameters get_controller_parameters(const hardware_interface::ComponentInfo& joint_info);
 
         /* FUNCTION FOR CONTROLLERS */
         void controllers_init();
