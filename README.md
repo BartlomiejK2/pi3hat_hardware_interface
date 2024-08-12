@@ -188,7 +188,7 @@ sudo double_"type"_test
 13. Create pull request with your code. Write description of your changes.
 
 #### :warning: IMPORTANT: value for `controller_type` parameter must be `"Type"` (like in `"Type"Wrapper`).
-#### :warning: IMPORTANT: To test wrappers seperately, comment plugin stuff before compiling. 
+#### :warning: IMPORTANT: To test wrappers seperately, comment `pluginlib` code before compiling. 
 
 ### Other changes
 1. Change code.
