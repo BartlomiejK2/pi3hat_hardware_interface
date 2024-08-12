@@ -10,7 +10,6 @@
 
 /* Author: Bartłomiej Krajewski (https://github.com/BartlomiejK2) */
 
-#include "pluginlib/class_loader.hpp"
 #include "controllers/ControllerBridge.hpp"
 
 using namespace pi3hat_controller_interface;

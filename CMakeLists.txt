@@ -100,6 +100,10 @@ ament_target_dependencies(
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 
+ament_target_dependencies(
+  controllers PUBLIC
+  pluginlib
+)
 
 ## Export hardware plugins
 pluginlib_export_plugin_description_file(hardware_interface pi3hat_hardware_interface.xml)

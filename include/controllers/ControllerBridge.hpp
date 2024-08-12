@@ -14,6 +14,8 @@
 #ifndef _CONTROLLER_BRIDGE_HPP_
 #define _CONTROLLER_BRIDGE_HPP_
 
+#include "pluginlib/class_loader.hpp"
+
 #include "3rd_libs/pi3hat/pi3hat.h"
 #include "ControllerStructures.hpp"
 #include "wrappers/ControllerWrapper.hpp"

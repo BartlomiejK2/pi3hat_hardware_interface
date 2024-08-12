@@ -29,9 +29,9 @@ class ControllerWrapper
     ControllerWrapper()  = default;
 
     public:
+    
     using CanFrame = mjbots::pi3hat::CanFrame;
 
-    ControllerWrapper() = default;
     ControllerWrapper(const ControllerWrapper& other) = default;
     ControllerWrapper(ControllerWrapper&& other) = default;
     ControllerWrapper& operator=(const ControllerWrapper& other) = default;
