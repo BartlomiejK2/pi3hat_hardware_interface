@@ -77,40 +77,13 @@ int main(int argc, char** argv)
     params_2.bus_ = 2;
     params_2.id_ = 2;
 
-    // moteusues options
-    using mjbots::moteus::Controller;
-    Controller::Options moteus_1_options;
-    moteus_1_options.bus = 1;
-    moteus_1_options.id = 1;
-
-    Controller::Options moteus_2_options;
-    moteus_2_options.bus = 2;
-    moteus_2_options.id = 2;
-
-    // moteus command format (it will be copied to wrapper)
-    mjbots::moteus::PositionMode::Format format;
-    format.feedforward_torque = mjbots::moteus::kFloat;
-    format.maximum_torque = mjbots::moteus::kFloat;
-    moteus_1_options.position_format = format;
-    moteus_2_options.position_format = format;
-
-    //moteus command (it will be copied to wrapper)
-    mjbots::moteus::PositionMode::Command moteus_1_command;
-    moteus_1_command.maximum_torque = params_1.torque_max_;
-    moteus_1_command.velocity_limit = params_1.velocity_max_;
-
-    mjbots::moteus::PositionMode::Command moteus_2_command;
-    moteus_2_command.maximum_torque = params_2.torque_max_;
-    moteus_2_command.velocity_limit = params_2.velocity_max_;
-
-
     std::vector<pi3hat_controller_interface::ControllerBridge> controllers;
     std::vector<pi3hat_controller_interface::ControllerCommand> controller_commands;
     std::vector<pi3hat_controller_interface::ControllerState> controller_states;
 
    
-    pi3hat_controller_interface::ControllerBridge controller_1("moteus", params_1); 
-    pi3hat_controller_interface::ControllerBridge controller_2("moteus", params_2); 
+    pi3hat_controller_interface::ControllerBridge controller_1("Moteus", params_1); 
+    pi3hat_controller_interface::ControllerBridge controller_2("Moteus", params_2); 
 
     controllers.push_back(std::move(controller_1));
     controllers.push_back(std::move(controller_2));
@@ -141,6 +114,10 @@ int main(int argc, char** argv)
         controller_commands[i].position_ = 0;
         controllers[i].make_command(tx_frame[i], controller_commands[i]);
     }
+
+    controller_states[0].position_ = 10000;
+    controller_states[1].position_ = 10000;
+
     while(std::abs(controller_states[0].position_) > 0.1 && std::abs(controller_states[1].position_) > 0.1)
     {
         pi3hat_output = pi3hat.Cycle(input);

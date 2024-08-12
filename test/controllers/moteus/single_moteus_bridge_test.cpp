@@ -64,24 +64,7 @@ int main(int argc, char** argv)
     params.bus_ = 1;
     params.id_ = 1;
 
-    // moteus options
-    using mjbots::moteus::Controller;
-    Controller::Options moteus_options;
-    moteus_options.bus = 1;
-    moteus_options.id = 1;
-
-    // moteus command format (it will be copied to wrapper)
-    mjbots::moteus::PositionMode::Format format;
-    format.feedforward_torque = mjbots::moteus::kFloat;
-    format.maximum_torque = mjbots::moteus::kFloat;
-    moteus_options.position_format = format;
-
-    //moteus command (it will be copied to wrapper)
-    mjbots::moteus::PositionMode::Command moteus_command;
-    moteus_command.maximum_torque = params.torque_max_;
-    moteus_command.velocity_limit = params.velocity_max_;
-
-    pi3hat_controller_interface::ControllerBridge controller("moteus", params);
+    pi3hat_controller_interface::ControllerBridge controller("Moteus", params);
 
 
     pi3hat_controller_interface::ControllerCommand controller_command;
@@ -102,7 +85,7 @@ int main(int argc, char** argv)
     ::usleep(10000);
     
     controller_command.position_ = 0;
-    controller_state.position_ = NaN;
+    controller_state.position_ = 100000;
     while(std::abs(controller_state.position_) > 0.1)
     {
         controller.make_command(tx_frame, controller_command);
