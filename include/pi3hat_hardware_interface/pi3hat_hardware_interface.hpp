@@ -145,7 +145,9 @@ namespace pi3hat_hardware_interface
         using JointState = pi3hat_controller_interface::ControllerState;
         using JointCommand = pi3hat_controller_interface::ControllerCommand;
 
-        /* Joint states and commands (for transmissions)*/
+        /* Joint names */
+
+        /* Joint states and commands (for transmissions) */
         std::vector<JointState> joint_states_;
         std::vector<JointCommand> joint_commands_;
 
@@ -157,19 +159,25 @@ namespace pi3hat_hardware_interface
         pi3hat_controller_interface::ControllerParameters get_controller_parameters(const hardware_interface::ComponentInfo& joint_info);
 
         /* FUNCTION FOR CONTROLLERS */
+
+        /* Initialize all the controllers */
         void controllers_init();
 
+        /* Make commands for all controllers */
         void controllers_make_commands();
 
+        /* Make queries for all controllers */
         void controllers_make_queries();
 
+        /* Get states from all controllers */
         void controllers_get_states();
 
+        /* Create map between CAN RX frame id's and joint id's */
         void create_controller_joint_map();
 
-        /* FUNCTIONS FOR CREATING TRANSMISSION OBJECTS:*/
+        /* FUNCTIONS FOR CREATING TRANSMISSION OBJECTS: */
 
-        /* Transmission interfaces*/
+        /* Transmission interfaces */
         std::vector<std::shared_ptr<transmission_interface::Transmission>> transmissions_;
 
         void joint_to_controller_transform();
@@ -201,6 +209,7 @@ namespace pi3hat_hardware_interface
 
 
         /* UTILITY FUNCTIONS */
+        
         bool string_to_bool(const std::string& str);
     }; 
 };

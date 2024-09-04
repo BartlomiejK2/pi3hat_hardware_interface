@@ -693,7 +693,8 @@ void Pi3HatHardwareInterface::create_controller_joint_map()
         for(int j = 0; j < joint_controller_number_; ++j)
         {
             int id_from_rx_frame = controller_bridges_[i].get_id(rx_can_frames_[j]);
-            RCLCPP_INFO(*logger_, "Joint: %d, Controller: %d, Frame id: %d, Frame bus: %d", joint_id, controller_id, rx_can_frames_[j].id, rx_can_frames_[j].bus);
+            RCLCPP_INFO(*logger_, "Joint name: %s, Joint id: %d, Controller id: %d, Frame id: %d, Frame BUS id: %d", 
+                info_.joints[i].name, joint_id, controller_id, rx_can_frames_[j].id, rx_can_frames_[j].bus);
             if(controller_id == id_from_rx_frame)
             {
                 std::pair<int, int> controller_joint_pair(rx_can_frames_[j].id, joint_id);

@@ -156,6 +156,9 @@ sudo simple_"type"_test
 sudo single_"type"_test
 sudo double_"type"_test
 ```
+
+#### :warning: IMPORTANT: To test wrappers seperately, comment `pluginlib` code before compiling.
+
 ### Testing hardware interface
 1. Go to `test/urdf`
 2. Choose urdfs with your controller type
@@ -187,8 +190,7 @@ sudo double_"type"_test
 12. Run all tests.
 13. Create pull request with your code. Write description of your changes.
 
-#### :warning: IMPORTANT: value for `controller_type` parameter must be `"Type"` (like in `"Type"Wrapper`).
-#### :warning: IMPORTANT: To test wrappers seperately, comment `pluginlib` code before compiling. 
+#### :warning: IMPORTANT: value for `controller_type` parameter must be `"Type"` (like in `"Type"Wrapper`). 
 
 ### Other changes
 1. Change code.
