@@ -59,7 +59,7 @@ target_compile_features(
 ## Custom controller bridge library
 ## Here add your wrappers!
 add_library(controllers SHARED
-  src/controllers/ControllerBridge.cpp
+  src/controllers/Controller.cpp
 )
 
 # add include directory

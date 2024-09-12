@@ -10,13 +10,13 @@
 
 /* Author: Bartłomiej Krajewski (https://github.com/BartlomiejK2) */
 
-#include "controllers/ControllerBridge.hpp"
+#include "controllers/Controller.hpp"
 
 using namespace pi3hat_controller_interface;
 using mjbots::pi3hat::CanFrame;
 
 
-ControllerBridge::ControllerBridge(
+Controller::Controller(
      std::string wrapper_type, 
      const ControllerParameters& params): 
      wrapper_(nullptr), params_(params)
@@ -35,10 +35,10 @@ ControllerBridge::ControllerBridge(
     wrapper_->set_parameters(params);
 }
      
-ControllerBridge::ControllerBridge(ControllerBridge&& other_controller):
+Controller::Controller(Controller&& other_controller):
     wrapper_(std::move(other_controller.wrapper_)), params_(other_controller.params_) {}
 
-ControllerBridge& ControllerBridge::operator=(ControllerBridge&& other_controller)
+Controller& Controller::operator=(Controller&& other_controller)
 {
     if (this != &other_controller)
     {
@@ -48,7 +48,7 @@ ControllerBridge& ControllerBridge::operator=(ControllerBridge&& other_controlle
     return *this;
 }
 
-void ControllerBridge::make_command(CanFrame& tx_frame, ControllerCommand& command) const
+void Controller::make_command(CanFrame& tx_frame, ControllerCommand& command) const
 {
     /* Basic transformations before sending data to wrapper */
     command.position_ = params_.direction_* std::clamp(command.position_,
@@ -62,13 +62,13 @@ void ControllerBridge::make_command(CanFrame& tx_frame, ControllerCommand& comma
     
 }
 
-void ControllerBridge::make_query(CanFrame& tx_frame) const
+void Controller::make_query(CanFrame& tx_frame) const
 {
     tx_frame.expect_reply = true;
     wrapper_->query_to_tx_frame(tx_frame);
 }
 
-void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& state) const
+void Controller::get_state(const CanFrame& rx_frame, ControllerState& state) const
 {
     wrapper_->rx_frame_to_state(rx_frame, state);
 
@@ -78,18 +78,18 @@ void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& stat
     state.torque_ = params_.direction_ * state.torque_; 
 }
 
-void ControllerBridge::initialize(CanFrame& tx_frame) const
+void Controller::initialize(CanFrame& tx_frame) const
 {
     tx_frame.expect_reply = true;
     wrapper_->init_to_tx_frame(tx_frame);
 }
 
-int ControllerBridge::get_id(const CanFrame& rx_frame)
+int Controller::get_id(const CanFrame& rx_frame)
 {
     return wrapper_->get_id_from_rx_frame(rx_frame);
 }
 
-ControllerParameters ControllerBridge::get_params()
+ControllerParameters Controller::get_params()
 {
     return params_;
 }

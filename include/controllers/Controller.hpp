@@ -11,8 +11,8 @@
 /* Author: Bartłomiej Krajewski (https://github.com/BartlomiejK2) */
 
 
-#ifndef _CONTROLLER_BRIDGE_HPP_
-#define _CONTROLLER_BRIDGE_HPP_
+#ifndef _CONTROLLER_HPP_
+#define _CONTROLLER_HPP_
 
 #include "pluginlib/class_loader.hpp"
 
@@ -28,7 +28,7 @@ namespace pi3hat_controller_interface
 
 /* Class for abstracting communication with diffrent type of controllers. 
    Class makes basic transformations for command and state structures before using wrapper */
-class ControllerBridge
+class Controller
 {
     private:
 
@@ -39,13 +39,13 @@ class ControllerBridge
 
 
     public:
-    ControllerBridge(std::string wrapper_type, 
+    Controller(std::string wrapper_type, 
      const ControllerParameters& params);
 
-    ControllerBridge(const ControllerBridge& other_controller) = delete;
-    ControllerBridge& operator=(const ControllerBridge& other_controller) = delete;
-    ControllerBridge(ControllerBridge&& other_controller);
-    ControllerBridge& operator=(ControllerBridge&& other_controller);
+    Controller(const Controller& other_controller) = delete;
+    Controller& operator=(const Controller& other_controller) = delete;
+    Controller(Controller&& other_controller);
+    Controller& operator=(Controller&& other_controller);
 
 
     /* Transform controller command to data in TX CAN frame */
@@ -66,7 +66,7 @@ class ControllerBridge
     /* Get parameters that were set by user */
     ControllerParameters get_params();
 
-    ~ControllerBridge() = default;
+    ~Controller() = default;
 };
 
 };

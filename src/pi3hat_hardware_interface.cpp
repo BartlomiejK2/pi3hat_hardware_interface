@@ -58,8 +58,8 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
 
         try
         {
-            ControllerBridge controller_bridge(wrapper_type, params);
-            controller_bridges_.push_back(std::move(controller_bridge));
+            Controller controller(wrapper_type, params);
+            controllers_.push_back(std::move(controller));
         }
         catch(const std::exception& e)
         {
@@ -655,7 +655,7 @@ void Pi3HatHardwareInterface::controllers_init()
 {
     for(int i = 0; i < joint_controller_number_; ++i)
     {
-        controller_bridges_[i].initialize(tx_can_frames_[i]);
+        controllers_[i].initialize(tx_can_frames_[i]);
     }
 }
 
@@ -663,7 +663,7 @@ void Pi3HatHardwareInterface::controllers_make_commands()
 {
     for(int i = 0; i < joint_controller_number_; ++i)
     {
-        controller_bridges_[i].make_command(tx_can_frames_[i], controller_commands_[i]);
+        controllers_[i].make_command(tx_can_frames_[i], controller_commands_[i]);
     }
 }
 
@@ -671,7 +671,7 @@ void Pi3HatHardwareInterface::controllers_make_queries()
 {
     for(int i = 0; i < joint_controller_number_; ++i)
     {
-        controller_bridges_[i].make_query(tx_can_frames_[i]);
+        controllers_[i].make_query(tx_can_frames_[i]);
     }
 }
 
@@ -680,7 +680,7 @@ void Pi3HatHardwareInterface::controllers_get_states()
     for(int i = 0; i < joint_controller_number_; ++i)
     {
         int joint_id = controller_joint_map_.at(rx_can_frames_[i].id);
-        controller_bridges_[joint_id].get_state(rx_can_frames_[i], controller_states_[joint_id]);
+        controllers_[joint_id].get_state(rx_can_frames_[i], controller_states_[joint_id]);
     }
 }
 
@@ -689,10 +689,10 @@ void Pi3HatHardwareInterface::create_controller_joint_map()
     for(int i = 0; i < joint_controller_number_; ++i)
     {
         int joint_id = i;
-        int controller_id = controller_bridges_[i].get_params().id_;
+        int controller_id = controllers_[i].get_params().id_;
         for(int j = 0; j < joint_controller_number_; ++j)
         {
-            int id_from_rx_frame = controller_bridges_[i].get_id(rx_can_frames_[j]);
+            int id_from_rx_frame = controllers_[i].get_id(rx_can_frames_[j]);
             RCLCPP_INFO(*logger_, "Joint name: %s, Joint id: %d, Controller id: %d, Frame id: %d, Frame BUS id: %d", 
                 info_.joints[i].name, joint_id, controller_id, rx_can_frames_[j].id, rx_can_frames_[j].bus);
             if(controller_id == id_from_rx_frame)
