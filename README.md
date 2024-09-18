@@ -157,8 +157,6 @@ sudo single_"type"_test
 sudo double_"type"_test
 ```
 
-#### :warning: IMPORTANT: To test wrappers seperately, comment `pluginlib` code before compiling.
-
 ### Testing hardware interface
 1. Go to `test/urdf`
 2. Choose urdfs with your controller type
