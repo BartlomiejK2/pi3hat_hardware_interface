@@ -153,8 +153,8 @@ bash "type"_tests_compile.sh
 4. Run tests:
 ```bash
 sudo simple_"type"_test
-sudo single_"type"_test
-sudo double_"type"_test
+sudo single_"type"_wrapper_test
+sudo double_"type"_wrapper_test
 ```
 
 ### Testing hardware interface
