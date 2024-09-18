@@ -148,13 +148,13 @@ colcon build --packages-select pi3hat_hardware_interface
 2. Choose controller type directory
 3. Compile tests:
 ```bash
-bash "type"_tests_compile.sh
+bash "type"_wrapper_tests_compile.sh
 ```
 4. Run tests:
 ```bash
-sudo simple_"type"_test
-sudo single_"type"_test
-sudo double_"type"_test
+sudo simple_wrapper_"type"_test
+sudo single_wrapper_"type"_test
+sudo double_wrapper_"type"_test
 ```
 ### Testing hardware interface
 1. Go to `test/urdf`
