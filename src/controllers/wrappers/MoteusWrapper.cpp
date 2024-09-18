@@ -99,6 +99,11 @@ int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
     return ((rx_frame.id>> 8) & 0x7f);
 }
 
-#include "pluginlib/class_list_macros.hpp"
+/* Compile this code with defined TEST_MOTEUS_WRAPPER flag for pure wrapper tests (without ROS2)
+   Check test/wrappers/moteus/moteus_tests_compile.sh*/
+#ifndef TEST_MOTEUS_WRAPPER
 
+#include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(pi3hat_controller_interface::MoteusWrapper, pi3hat_controller_interface::ControllerWrapper)
+
+#endif
