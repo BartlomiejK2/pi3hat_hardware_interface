@@ -148,10 +148,11 @@ colcon build --packages-select pi3hat_hardware_interface
 2. Choose controller type directory
 3. Compile tests:
 ```bash
-bash "type"_tests_compile.sh
+bash "type"_wrapper_tests_compile.sh
 ```
 4. Run tests:
 ```bash
+cd exe/
 sudo simple_"type"_test
 sudo single_"type"_wrapper_test
 sudo double_"type"_wrapper_test
