@@ -84,6 +84,12 @@ void ControllerBridge::initialize(CanFrame& tx_frame) const
     wrapper_->init_to_tx_frame(tx_frame);
 }
 
+void ControllerBridge::make_start(CanFrame& tx_frame) const
+{
+    tx_frame.expect_reply = true;
+    wrapper_->start_to_tx_frame(tx_frame);
+}
+
 int ControllerBridge::get_id(const CanFrame& rx_frame)
 {
     return wrapper_->get_id_from_rx_frame(rx_frame);

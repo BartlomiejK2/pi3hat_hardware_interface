@@ -43,6 +43,7 @@ class MoteusWrapper final: public ControllerWrapper
     void query_to_tx_frame(CanFrame& tx_frame) override;
     void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) override;
     void init_to_tx_frame(CanFrame& tx_frame) override;
+    void start_to_tx_frame(CanFrame& tx_frame) override;
     int get_id_from_rx_frame(const CanFrame& rx_frame) override;
 
 };

@@ -78,6 +78,27 @@ void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame)
     std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
 }
 
+void MoteusWrapper::start_to_tx_frame(CanFrame& tx_frame)
+{
+    mjbots::moteus::PositionMode::Command start_command;
+
+    /* Change command values */
+    start_command.position = 0.0;
+    start_command.velocity = 0.0;
+    start_command.feedforward_torque = 0.0;
+    start_command.velocity_limit = 1.0; // For slow start
+    start_command.maximum_torque = 0.1;  // For slow start
+
+    /* Create CANFD frame */
+    mjbots::moteus::CanFdFrame can_fd_frame = moteus_controller_.MakePosition(start_command);
+    
+    /* Copy data from CANFD frame to CAN frame */
+    tx_frame.id = can_fd_frame.arbitration_id;
+    tx_frame.bus = can_fd_frame.bus;
+    tx_frame.size = can_fd_frame.size;
+    std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
+}
+
 int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
 {
     /* Get real motor if from RX CAN Pi3hat frame */
@@ -97,7 +118,7 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     mjbots::moteus::PositionMode::Format format;
     format.feedforward_torque = mjbots::moteus::kFloat;
     format.maximum_torque = mjbots::moteus::kFloat;
-    format.velocity_limit= mjbots::moteus::kFloat;
+    format.velocity_limit = mjbots::moteus::kFloat;
     moteus_options.position_format = format;
 
     /* Moteus command (it will be copied to wrapper) */

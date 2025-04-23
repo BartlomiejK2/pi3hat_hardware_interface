@@ -58,6 +58,9 @@ class ControllerBridge
     /* Initialize controller */
     void initialize(CanFrame& tx_frame) const;
 
+    /* Create TX CAN frame that slowly set controller to 0.0 position */
+    void make_start(CanFrame& tx_frame) const;
+
     /* Get id from RX CAN frame (sometimes raw id from rx frame needs to be transformed)*/
     int get_id(const CanFrame& rx_frame);
 

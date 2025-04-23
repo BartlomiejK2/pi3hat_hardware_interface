@@ -187,10 +187,11 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rclcpp_lifecycle::State &previous_state)
 {
 
-    /* Make start from actual motor position to 0.0 (offset included in controller bridges) */
+     /* Make slow start from actual motor position to 0.0 for 1 second
+        (offset included in controller bridges) */
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
-    controllers_make_commands();
+    controllers_start();
     pi3hat_->Cycle(pi3hat_input_);
     ::usleep(1000000);
     controllers_get_states();
@@ -224,11 +225,11 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const 
     }
 
     
-    /* Make slow start from actual motor position to 0.0 for 10 seconds 
+    /* Make slow start from actual motor position to 0.0 for 1 second
         (offset included in controller bridges) */
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
-    controllers_make_commands();
+    controllers_start();
     pi3hat_->Cycle(pi3hat_input_);
     ::usleep(1000000);
     controllers_get_states();
@@ -662,6 +663,14 @@ void Pi3HatHardwareInterface::controllers_init()
     for(int i = 0; i < joint_controller_number_; ++i)
     {
         controller_bridges_[i].initialize(tx_can_frames_[i]);
+    }
+}
+
+void Pi3HatHardwareInterface::controllers_start()
+{
+    for(int i = 0; i < joint_controller_number_; ++i)
+    {
+        controller_bridges_[i].make_start(tx_can_frames_[i]);
     }
 }
 

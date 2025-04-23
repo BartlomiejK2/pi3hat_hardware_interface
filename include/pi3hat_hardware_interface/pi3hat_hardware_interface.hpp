@@ -159,6 +159,8 @@ namespace pi3hat_hardware_interface
         /* FUNCTION FOR CONTROLLERS */
         void controllers_init();
 
+        void controllers_start();
+
         void controllers_make_commands();
 
         void controllers_make_queries();

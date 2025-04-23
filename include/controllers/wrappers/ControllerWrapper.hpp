@@ -40,6 +40,7 @@ class ControllerWrapper
     virtual void query_to_tx_frame(CanFrame& tx_frame) = 0;
     virtual void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) = 0;
     virtual void init_to_tx_frame(CanFrame& tx_frame) = 0;
+    virtual void start_to_tx_frame(CanFrame& tx_frame) = 0;
     virtual int get_id_from_rx_frame(const CanFrame& rx_frame) = 0;
 
     virtual ~ControllerWrapper() = default;
