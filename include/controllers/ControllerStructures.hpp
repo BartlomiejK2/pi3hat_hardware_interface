@@ -32,7 +32,7 @@ struct ControllerState
     double velocity_ = 0;           /* [radians/s] */
     double torque_ = 0;             /* [Nm] */
     double temperature_ = 0;        /* [Celcius] */
-    int fault_ = 0;                  /* Fault flags */
+    double fault_ = 0;                  /* Fault flags */
 };
 
 /* Structure for basic controller parameters */
