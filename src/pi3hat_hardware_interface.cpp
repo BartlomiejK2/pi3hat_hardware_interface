@@ -181,21 +181,20 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
     /* Get states with prepared controller -> joint map */
     controllers_get_states();
 
+    controller_to_joint_transform();
+
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rclcpp_lifecycle::State &previous_state)
 {
 
-    /* Make start from actual motor position to 0.0 (offset included in controller bridges) */
+    /* Make slow movement from actual motor position to 0.0 (motor and joint offsets included) */
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
     reset_joint_data();
 
-    controllers_make_commands();
-    pi3hat_->Cycle(pi3hat_input_);
-    ::usleep(1000000);
-    controllers_get_states();
+    slow_to_zero_position();
     
     RCLCPP_INFO(*logger_, "Motors reached starting position!");
 
@@ -205,16 +204,13 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rc
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const rclcpp_lifecycle::State &previous_state)
 {
     
-    /* Make slow start from actual motor position to 0.0 for 10 seconds 
-        (offset included in controller bridges) */
+    /* Make slow movement from actual motor position to 0.0 (motor and joint offsets included) */
+
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
     reset_joint_data();
 
-    controllers_make_commands();
-    pi3hat_->Cycle(pi3hat_input_);
-    ::usleep(1000000);
-    controllers_get_states();
+    slow_to_zero_position();
     
     RCLCPP_INFO(*logger_, "Motors reached starting position!");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -705,6 +701,60 @@ Pi3HatHardwareInterface::~Pi3HatHardwareInterface()
     on_cleanup(rclcpp_lifecycle::State());
 }
 
+void Pi3HatHardwareInterface::slow_to_zero_position()
+{
+    int max_iterations = 20;
+    double max_difference = 1e-3;
+    int iteration = 0;
+    double position_sum = 0.0;
+    std::vector<double> starting_positions(joint_controller_number_);
+    
+    for(int i = 0; i < joint_controller_number_; ++i)
+    {
+        starting_positions[i] = joint_states_[i].position_;
+        position_sum += joint_states_[i].position_ * joint_states_[i].position_;
+        position_sum = sqrt(position_sum);
+    }
+
+    while(iteration < max_iterations && position_sum > max_difference)
+    {
+        RCLCPP_INFO(*logger_, "To zero joint position, iteration: %d, norm: %f", iteration, position_sum);
+
+        double path_part = (double) iteration / (double) max_iterations;
+
+        for(int i = 0; i < joint_controller_number_; ++i)
+        {
+            joint_commands_[i].position_ = starting_positions[i] * (1 - path_part);
+        }
+
+        joint_to_controller_transform();
+
+        controllers_make_commands();
+    
+        mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
+        ::usleep(1000);
+
+        if (result.error)
+        {
+            RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed!");
+        }
+
+        if(result.rx_can_size > 0)
+        {
+            controllers_get_states();
+        }
+
+        controller_to_joint_transform();
+
+        position_sum = 0.0;
+
+        for(int i = 0; i < joint_controller_number_; ++i)
+        {
+            position_sum += joint_states_[i].position_ * joint_states_[i].position_;
+            position_sum = sqrt(position_sum);
+        }
+    }
+}
 
 bool Pi3HatHardwareInterface::string_to_bool(const std::string& str)
 {
@@ -746,8 +796,6 @@ void Pi3HatHardwareInterface::reset_joint_data()
         joint_transmission_passthrough_[i].torque_ = 0;
     }
 }
-
-
 
 #include "pluginlib/class_list_macros.hpp"
 
