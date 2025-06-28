@@ -147,9 +147,14 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
 
     /* Initialize all motors/remove all flags and make query for state */
 
+    using namespace std::literals::chrono_literals;
+
+    const auto sleep_time_long = 1s;
+    const auto sleep_time_short = 100ms;
+
     controllers_init();
     auto result = pi3hat_->Cycle(pi3hat_input_);
-    ::usleep(1000000);
+    std::this_thread::sleep_for(sleep_time_long);
 
     /* Get all rx_frames ids (be sure there are no duplicates) */
 
@@ -159,7 +164,8 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
     {
         controllers_make_queries();
         result = pi3hat_->Cycle(pi3hat_input_);
-        ::usleep(100000);
+        std::this_thread::sleep_for(sleep_time_short);
+
         for(int i = 0; i < joint_controller_number_; ++i)
         {
             rx_ids[i] = rx_can_frames_[i].id;
@@ -220,9 +226,14 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_cleanup(const rcl
 {
 
     /* Deinitialize all motors/remove all flags */
+
+    using namespace std::literals::chrono_literals;
+
+    const auto sleep_time = 1s;
+
     controllers_init();
     pi3hat_->Cycle(pi3hat_input_);
-    ::usleep(1000000);
+    std::this_thread::sleep_for(sleep_time);
 
     return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -703,10 +714,14 @@ Pi3HatHardwareInterface::~Pi3HatHardwareInterface()
 
 void Pi3HatHardwareInterface::slow_to_zero_position()
 {
-    int max_iterations = 20;
+    int max_iterations = 1000;
     double max_difference = 1e-3;
     int iteration = 0;
     double position_sum = 0.0;
+
+    using namespace std::literals::chrono_literals;
+    const auto sleep_time = 10ms;
+
     std::vector<double> starting_positions(joint_controller_number_);
     
     for(int i = 0; i < joint_controller_number_; ++i)
@@ -732,7 +747,8 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
         controllers_make_commands();
     
         mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
-        ::usleep(1000);
+        
+        std::this_thread::sleep_for(sleep_time);
 
         if (result.error)
         {
