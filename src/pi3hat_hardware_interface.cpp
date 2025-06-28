@@ -200,7 +200,19 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rc
 
     reset_joint_data();
 
-    slow_to_zero_position();
+    bool slow_to_zero = true;
+
+    if(info_.hardware_parameters.find("slow_to_zero") == info_.hardware_parameters.end())
+    {
+        slow_to_zero = false;
+    }
+    else
+    {
+        slow_to_zero = string_to_bool(info_.hardware_parameters.at("slow_to_zero"));
+    }
+
+    if(slow_to_zero) slow_to_zero_position();
+    else fast_to_zero_position();
     
     RCLCPP_INFO(*logger_, "Motors reached starting position!");
 
@@ -216,7 +228,19 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const 
 
     reset_joint_data();
 
-    slow_to_zero_position();
+    bool slow_to_zero = true;
+
+    if(info_.hardware_parameters.find("slow_to_zero") == info_.hardware_parameters.end())
+    {
+        slow_to_zero = false;
+    }
+    else
+    {
+        slow_to_zero = string_to_bool(info_.hardware_parameters.at("slow_to_zero"));
+    }
+
+    if(slow_to_zero) slow_to_zero_position();
+    else fast_to_zero_position();
     
     RCLCPP_INFO(*logger_, "Motors reached starting position!");
     return hardware_interface::CallbackReturn::SUCCESS;
@@ -731,6 +755,8 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
         position_sum = sqrt(position_sum);
     }
 
+    RCLCPP_INFO(*logger_, "Moving slowly to joint zero position!");
+
     while(iteration < max_iterations && position_sum > max_difference)
     {
         RCLCPP_INFO(*logger_, "To zero joint position, iteration: %d, norm: %f", iteration, position_sum);
@@ -770,6 +796,36 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
             position_sum = sqrt(position_sum);
         }
     }
+}
+
+void Pi3HatHardwareInterface::fast_to_zero_position()
+{
+    using namespace std::literals::chrono_literals;
+    const auto sleep_time = 100ms;
+
+    RCLCPP_INFO(*logger_, "Moving quickly to joint zero position!");
+
+    joint_to_controller_transform();
+
+    controllers_make_commands();
+
+    mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
+        
+    std::this_thread::sleep_for(sleep_time);
+
+    std::this_thread::sleep_for(sleep_time);
+
+    if (result.error)
+    {
+        RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed!");
+    }
+
+    if(result.rx_can_size > 0)
+    {
+        controllers_get_states();
+    }
+
+    controller_to_joint_transform();
 }
 
 bool Pi3HatHardwareInterface::string_to_bool(const std::string& str)

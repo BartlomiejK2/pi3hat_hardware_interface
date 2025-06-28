@@ -198,8 +198,10 @@ namespace pi3hat_hardware_interface
          const std::string actuator_name, const int actuator_index);
 
         
-        /* FUNCTIONS FOR SLOW START/STOP */
+        /* FUNCTIONS FOR START/STOP */
         void slow_to_zero_position();
+        void fast_to_zero_position();
+
 
 
         /* UTILITY FUNCTIONS */

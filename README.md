@@ -71,6 +71,7 @@ colcon build --packages-select pi3hat_hardware_interface
     <param name="imu_mounting_deg.pitch">0</param>
     <param name="imu_mounting_deg.roll">0</param>
     <param name="imu_sampling_rate">1000</param>
+    <param name="slow_to_zero">true</param>
 
     <param name="can_1_fdcan_frame">true</param>
     <param name="can_1_automatic_retransmission">true</param>
@@ -99,7 +100,8 @@ colcon build --packages-select pi3hat_hardware_interface
 `imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [`Hz`]\
 `can_X_fdcan_frame` - Using FDCAN frame in X CAN bus [`bool`]\
 `can_X_automatic_retransmission` - Using automatic retransmission in X CAN bus [`bool`]\
-`can_X_bitrate_switch` - Using bitrate switch in X CAN bus [`bool`]
+`can_X_bitrate_switch` - Using bitrate switch in X CAN bus [`bool`]\
+`slow_to_zero` - Move joints from current position to zero during activation and deactivation[`bool`]
 
 ### Controller/Motor options:
 
