@@ -795,6 +795,8 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
             position_sum += joint_states_[i].position_ * joint_states_[i].position_;
             position_sum = sqrt(position_sum);
         }
+
+        iteration += 1;
     }
 }
 
