@@ -149,8 +149,8 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
 
     using namespace std::literals::chrono_literals;
 
-    const auto sleep_time_long = 1s;
-    const auto sleep_time_short = 100ms;
+    const auto sleep_time_long = 100ms;
+    const auto sleep_time_short = 10ms;
 
     controllers_init();
     auto result = pi3hat_->Cycle(pi3hat_input_);
@@ -253,7 +253,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_cleanup(const rcl
 
     using namespace std::literals::chrono_literals;
 
-    const auto sleep_time = 1s;
+    const auto sleep_time = 10ms;
 
     controllers_init();
     pi3hat_->Cycle(pi3hat_input_);
@@ -801,7 +801,7 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
 void Pi3HatHardwareInterface::fast_to_zero_position()
 {
     using namespace std::literals::chrono_literals;
-    const auto sleep_time = 100ms;
+    const auto sleep_time = 10ms;
 
     RCLCPP_INFO(*logger_, "Moving quickly to joint zero position!");
 
@@ -811,8 +811,6 @@ void Pi3HatHardwareInterface::fast_to_zero_position()
 
     mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
         
-    std::this_thread::sleep_for(sleep_time);
-
     std::this_thread::sleep_for(sleep_time);
 
     if (result.error)
