@@ -757,7 +757,7 @@ void Pi3HatHardwareInterface::slow_to_zero_position()
 
     RCLCPP_INFO(*logger_, "Moving slowly to joint zero position!");
 
-    while(iteration < max_iterations && position_sum > max_difference)
+    while(iteration < max_iterations || position_sum > max_difference)
     {
         RCLCPP_INFO(*logger_, "To zero joint position, iteration: %d, norm: %f", iteration, position_sum);
 
