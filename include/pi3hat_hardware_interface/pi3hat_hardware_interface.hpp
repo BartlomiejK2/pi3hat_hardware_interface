@@ -21,7 +21,9 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
-#include<unistd.h> 
+#include <unistd.h> 
+#include <chrono>
+#include <thread>
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/duration.hpp"
@@ -196,8 +198,10 @@ namespace pi3hat_hardware_interface
          const std::string actuator_name, const int actuator_index);
 
         
-        /* FUNCTIONS FOR INITIALIZING PI3HAT/CAN INTERFACE */
-        
+        /* FUNCTIONS FOR START/STOP */
+        void slow_to_zero_position();
+        void fast_to_zero_position();
+
 
 
         /* UTILITY FUNCTIONS */
