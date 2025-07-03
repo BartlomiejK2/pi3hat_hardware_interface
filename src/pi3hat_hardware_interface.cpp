@@ -739,7 +739,7 @@ Pi3HatHardwareInterface::~Pi3HatHardwareInterface()
 void Pi3HatHardwareInterface::slow_to_zero_position()
 {
     int max_iterations = 1000;
-    double max_difference = 1e-3;
+    double max_difference = 1e-2;
     int iteration = 0;
     double position_sum = 0.0;
 
