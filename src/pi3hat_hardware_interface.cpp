@@ -99,6 +99,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     /* Initialize the Pi3Hat input */ 
 
     pi3hat_input_ = mjbots::pi3hat::Pi3Hat::Input();
+    pi3hat_input_.timeout_ns = 100;
     pi3hat_input_.request_attitude = true;
     pi3hat_input_.wait_for_attitude = true;
     pi3hat_input_.attitude = &attitude_;
@@ -118,7 +119,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     std::string auto_retransmission = "automatic_retransmission";
     std::string bitrate_switch = "bitrate_switch";
 
-    for(int i = 0; i < 5; ++i)
+    for(size_t i = 0; i < 5; ++i)
     {
         std::string can_channel = "can_" + std::to_string(i + 1) + "_";
         try
@@ -158,6 +159,8 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
     if(result.error || result.rx_can_size <= 0)
     {
         RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_configure()!\"");
+        RCLCPP_ERROR(*logger_, "Error flag: %d, Amount of CAN frames:", 
+            result.error, result.rx_can_size);
         return hardware_interface::CallbackReturn::ERROR;
     }
 
@@ -170,7 +173,6 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
     const auto max_configure_time = 10s;
 
     std::vector<uint32_t> rx_ids;
-    rx_ids.resize(joint_controller_number_);
     do
     {
         controllers_make_queries();
@@ -179,13 +181,20 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
         if(result.error || result.rx_can_size <= 0)
         {
             RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_configure()!\"");
+            RCLCPP_ERROR(*logger_, "Error flag: %d, Amount of CAN frames:", 
+            result.error, result.rx_can_size);
             return hardware_interface::CallbackReturn::ERROR;
         }
 
         std::this_thread::sleep_for(sleep_time);
-        for(int i = 0; i < joint_controller_number_; ++i)
+        for(size_t i = 0; i < result.rx_can_size; ++i)
         {
-            rx_ids[i] = rx_can_frames_[i].id;
+            if(std::find(rx_ids.begin(), rx_ids.end(), rx_can_frames_[i].id) == rx_ids.end())
+            {
+                RCLCPP_INFO(*logger_, "Configuration, new ID found: %d", 
+                    rx_can_frames_[i].id);
+                rx_ids.push_back(rx_can_frames_[i].id);
+            }
         }
 
         if((std::chrono::steady_clock::now() - configure_start_time) > max_configure_time)
@@ -194,12 +203,12 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
             return hardware_interface::CallbackReturn::ERROR;
         }
     } 
-    while(std::adjacent_find(rx_ids.begin(), rx_ids.end()) != rx_ids.end());
+    while(rx_ids.size() != joint_controller_number_);
 
     /* Create rx_frame.id -> joint map */
     try
     {
-        create_controller_joint_map();
+        create_controller_joint_map(rx_ids);
     }
     catch(const std::exception& e)
     {
@@ -207,42 +216,47 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_configure(const r
         return hardware_interface::CallbackReturn::ERROR;
     }
 
-    /* Get states with prepared controller -> joint map */
-    controllers_get_states();
-
-    controller_to_joint_transform();
-
     return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rclcpp_lifecycle::State &previous_state)
 {
 
-    /* Make start from actual motor position to 0.0 (offset included in controller bridges) */
-    RCLCPP_INFO(*logger_, "Motors reaching starting position!");
+    /* Lock motors in current place */
+    RCLCPP_INFO(*logger_, "Locking motors in current position!");
 
     using namespace std::literals::chrono_literals;
     const auto sleep_time = 10ms;
 
-    reset_joint_data();
+    /* Get current position and set it for write() */
 
-    joint_to_controller_transform();
+    const auto query_start_time = std::chrono::steady_clock::now();
+    const auto max_query_time = 1s;
 
-    controllers_make_commands();
-    const auto result = pi3hat_->Cycle(pi3hat_input_);
-
-    if(result.error || result.rx_can_size <= 0)
+    while((std::chrono::steady_clock::now() - query_start_time) < max_query_time)
     {
-        RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_active()!\"");
-        return hardware_interface::CallbackReturn::ERROR;
+        controllers_make_queries();
+
+        const auto result = pi3hat_->Cycle(pi3hat_input_);
+
+        if(result.error || result.rx_can_size <= 0)
+        {
+            RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_activate()!\"");
+            RCLCPP_ERROR(*logger_, "Error flag: %d, Amount of CAN frames:", 
+                result.error, result.rx_can_size);
+            return hardware_interface::CallbackReturn::ERROR;
+        }
+        std::this_thread::sleep_for(sleep_time);
+
+        controllers_get_states(result.rx_can_size);
+        if(result.rx_can_size == joint_controller_number_) break;
     }
 
-    std::this_thread::sleep_for(sleep_time);
-    controllers_get_states();
-
     controller_to_joint_transform();
+
+    reset_joint_data();
     
-    RCLCPP_INFO(*logger_, "Motors reached starting position!");
+    RCLCPP_INFO(*logger_, "Locked motors in current position!");
 
     return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -250,8 +264,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rc
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const rclcpp_lifecycle::State &previous_state)
 {
     
-    /* Make slow start from actual motor position to 0.0 for 10 seconds 
-        (offset included in controller bridges) */
+    /* Lock motors in current place */
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
     using namespace std::literals::chrono_literals;
@@ -267,11 +280,13 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const 
     if(result.error || result.rx_can_size <= 0)
     {
         RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_deactivate()!\"");
+        RCLCPP_ERROR(*logger_, "Error flag: %d, Amount of CAN frames:", 
+            result.error, result.rx_can_size);
         return hardware_interface::CallbackReturn::ERROR;
     }
 
     std::this_thread::sleep_for(sleep_time);
-    controllers_get_states();
+    controllers_get_states(result.rx_can_size);
 
     controller_to_joint_transform();
     
@@ -283,19 +298,16 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_cleanup(const rcl
 {
 
     /* Deinitialize all motors/remove all flags */
-
-    using namespace std::literals::chrono_literals;
-    const auto sleep_time = 10ms;
     controllers_init();
     const auto result  = pi3hat_->Cycle(pi3hat_input_);
 
     if(result.error || result.rx_can_size <= 0)
     {
         RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"on_cleanup()!\"");
+        RCLCPP_ERROR(*logger_, "Error flag: %d, Amount of CAN frames:", 
+            result.error, result.rx_can_size);
         return hardware_interface::CallbackReturn::ERROR;
     }
-
-    std::this_thread::sleep_for(sleep_time);
 
     return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -305,7 +317,7 @@ std::vector<hardware_interface::CommandInterface> Pi3HatHardwareInterface::expor
     std::vector<hardware_interface::CommandInterface> command_interfaces;
 
     /* Joint commands (before joint -> controller transformation)*/
-    for (int i = 0; i < joint_controller_number_; i++)
+    for (size_t i = 0; i < joint_controller_number_; i++)
     {   
         if(!(info_.joints[i].command_interfaces.size() > 0))
         {
@@ -343,7 +355,7 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
     std::vector<hardware_interface::StateInterface> state_interfaces;
 
     /* Joint states (after controller -> joint transformation)*/
-    for (int i = 0; i < joint_controller_number_; i++)
+    for (size_t i = 0; i < joint_controller_number_; i++)
     {
         if(!(info_.joints[i].state_interfaces.size() > 0))
         {
@@ -421,7 +433,7 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
 
 hardware_interface::return_type Pi3HatHardwareInterface::write(const rclcpp::Time &time, const rclcpp::Duration &period)
 {
-    for (int i = 0; i < joint_controller_number_; ++i)
+    for (size_t i = 0; i < joint_controller_number_; ++i)
     {
         if (std::isnan(joint_commands_[i].position_) || std::isnan(joint_commands_[i].velocity_) || std::isnan(joint_commands_[i].torque_))
         {
@@ -439,6 +451,7 @@ hardware_interface::return_type Pi3HatHardwareInterface::write(const rclcpp::Tim
     if(result.error)
     {
         RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"write()\"!");
+        RCLCPP_ERROR(*logger_, "Error flag: %d", result.error);
         return hardware_interface::return_type::ERROR;
     }
 
@@ -449,7 +462,7 @@ hardware_interface::return_type Pi3HatHardwareInterface::write(const rclcpp::Tim
 
     if(result.rx_can_size > 0)
     {
-        controllers_get_states();
+        controllers_get_states(result.rx_can_size);
     }
 
     controller_to_joint_transform();
@@ -464,18 +477,17 @@ hardware_interface::return_type Pi3HatHardwareInterface::read(const rclcpp::Time
 
 void Pi3HatHardwareInterface::joint_to_controller_transform()
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         joint_transmission_passthrough_[i].position_ = joint_commands_[i].position_;
         joint_transmission_passthrough_[i].velocity_ = joint_commands_[i].velocity_;
         joint_transmission_passthrough_[i].torque_ = joint_commands_[i].torque_;
     }
 
-    std::for_each(
-    transmissions_.begin(), transmissions_.end(),
+    std::for_each(transmissions_.begin(), transmissions_.end(),
     [](auto & transmission) { transmission->joint_to_actuator(); });
 
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_commands_[i].position_ = controller_transmission_passthrough_[i].position_;
         controller_commands_[i].velocity_ = controller_transmission_passthrough_[i].velocity_;
@@ -485,18 +497,17 @@ void Pi3HatHardwareInterface::joint_to_controller_transform()
 
 void Pi3HatHardwareInterface::controller_to_joint_transform()
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_transmission_passthrough_[i].position_ = controller_states_[i].position_;
         controller_transmission_passthrough_[i].velocity_ = controller_states_[i].velocity_;
         controller_transmission_passthrough_[i].torque_ = controller_states_[i].torque_;
     }
 
-    std::for_each(
-    transmissions_.begin(), transmissions_.end(),
+    std::for_each(transmissions_.begin(), transmissions_.end(),
     [](auto & transmission) { transmission->actuator_to_joint(); });
 
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         joint_states_[i].position_ = joint_transmission_passthrough_[i].position_;
         joint_states_[i].velocity_ = joint_transmission_passthrough_[i].velocity_;
@@ -659,7 +670,7 @@ void Pi3HatHardwareInterface::create_transmission_interface(const hardware_inter
     std::vector<transmission_interface::JointHandle> joint_handles;
     std::vector<transmission_interface::ActuatorHandle> actuator_handles;
 
-    for(int i = 0; i < joint_for_transmission; ++i)
+    for(size_t i = 0; i < joint_for_transmission; ++i)
     {
         std::vector<std::string>::const_iterator joint_it = std::find(joint_names.begin(), 
           joint_names.end(), transmission_info.joints[i].name);
@@ -711,7 +722,7 @@ ControllerParameters Pi3HatHardwareInterface::get_controller_parameters(const ha
 
 void Pi3HatHardwareInterface::controllers_init()
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_bridges_[i].initialize(tx_can_frames_[i]);
     }
@@ -719,7 +730,7 @@ void Pi3HatHardwareInterface::controllers_init()
 
 void Pi3HatHardwareInterface::controllers_make_commands()
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_bridges_[i].make_command(tx_can_frames_[i], controller_commands_[i]);
     }
@@ -727,15 +738,15 @@ void Pi3HatHardwareInterface::controllers_make_commands()
 
 void Pi3HatHardwareInterface::controllers_make_queries()
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_bridges_[i].make_query(tx_can_frames_[i]);
     }
 }
 
-void Pi3HatHardwareInterface::controllers_get_states()
+void Pi3HatHardwareInterface::controllers_get_states(size_t current_can_size)
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < current_can_size; ++i)
     {
         int joint_id = controller_joint_map_.at(rx_can_frames_[i].id);
         controller_bridges_[joint_id].get_state(rx_can_frames_[i], controller_states_[joint_id]);
@@ -745,18 +756,27 @@ void Pi3HatHardwareInterface::controllers_get_states()
     }
 }
 
-void Pi3HatHardwareInterface::create_controller_joint_map()
+void Pi3HatHardwareInterface::create_controller_joint_map(std::vector<uint32_t>& can_ids)
 {
-    for(int i = 0; i < joint_controller_number_; ++i)
+    if(can_ids.size() != joint_controller_number_)
+    {
+        RCLCPP_ERROR(*logger_, "Can IDs vector have length %d, should have %d!", 
+            can_ids.size(), joint_controller_number_);
+        throw std::logic_error("Failed while creating joint -> controller map!");    
+    }
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         int joint_id = i;
+        const std::string joint_name = info_.joints[i].name;
         int controller_id = controller_bridges_[i].get_params().id_;
-        for(int j = 0; j < joint_controller_number_; ++j)
+        for(size_t j = 0; j < joint_controller_number_; ++j)
         {
             int id_from_rx_frame = controller_bridges_[i].get_id(rx_can_frames_[j]);
-            RCLCPP_INFO(*logger_, "Joint: %d, Controller: %d, Frame id: %d, Frame bus: %d", joint_id, controller_id, id_from_rx_frame, rx_can_frames_[j].bus);
             if(controller_id == id_from_rx_frame)
             {
+                RCLCPP_INFO(*logger_, "Joint name: %s, Joint ID: %d, Controller ID: %d, "
+                    "Frame ID: %d, Frame bus: %d", joint_name.c_str(), joint_id, 
+                    controller_id, rx_can_frames_[j].id, rx_can_frames_[j].bus);
                 std::pair<int, int> controller_joint_pair(rx_can_frames_[j].id, joint_id);
                 controller_joint_map_.emplace(controller_joint_pair);
                 break;
@@ -765,7 +785,9 @@ void Pi3HatHardwareInterface::create_controller_joint_map()
     }
     if(controller_joint_map_.size() != joint_controller_number_)
     {
-        throw std::logic_error("Controller -> Joint map has diffrent length!");
+        RCLCPP_ERROR(*logger_, "Map vector have length %d, should have %d!", 
+            controller_joint_map_.size(), joint_controller_number_);
+        throw std::logic_error("Failed while creating joint -> controller map!"); 
     }
 }
 
@@ -796,7 +818,7 @@ void Pi3HatHardwareInterface::reset_joint_data()
 {
     /* Set all commands, states and transmission passthrough to end state */
 
-    for(int i = 0; i < joint_controller_number_; ++i)
+    for(size_t i = 0; i < joint_controller_number_; ++i)
     {
         controller_commands_[i].position_ = controller_states_[i].position_; // start and end with current position
         controller_commands_[i].velocity_ = 0;
