@@ -67,6 +67,7 @@ colcon build --packages-select pi3hat_hardware_interface
 <ros2_control name="pi3hat_hardware_interface" type="system">
   <hardware>
     <plugin>pi3hat_hardware_interface/Pi3HatHardwareInterface</plugin>
+    <param name="wait_for_attitude">false</param>
     <param name="imu_mounting_deg.yaw">0</param>
     <param name="imu_mounting_deg.pitch">0</param>
     <param name="imu_mounting_deg.roll">0</param>
@@ -95,6 +96,8 @@ colcon build --packages-select pi3hat_hardware_interface
   ...
 </ros2_control>
 ```
+`wait_for_attitude` - Wait for attitude data [`bool`]\ 
+#### :warning: IMPORTANT: Setting `wait_for_attitude` to `true` can result stalls on CPU!
 `imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [`degrees`]\
 `imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [`Hz`]\
 `can_X_fdcan_frame` - Using FDCAN frame in X CAN bus [`bool`]\

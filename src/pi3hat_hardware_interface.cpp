@@ -99,9 +99,8 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     /* Initialize the Pi3Hat input */ 
 
     pi3hat_input_ = mjbots::pi3hat::Pi3Hat::Input();
-    pi3hat_input_.timeout_ns = 100;
     pi3hat_input_.request_attitude = true;
-    pi3hat_input_.wait_for_attitude = true;
+    pi3hat_input_.wait_for_attitude = string_to_bool(info_.hardware_parameters.at("wait_for_attitude"));
     pi3hat_input_.attitude = &attitude_;
 
     tx_can_frames_.resize(joint_controller_number_);

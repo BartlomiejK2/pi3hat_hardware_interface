@@ -122,6 +122,7 @@
   <ros2_control name="pi3hat_hardware_interface" type="system">
     <hardware>
           <plugin>pi3hat_hardware_interface/Pi3HatHardwareInterface</plugin>
+            <param name="wait_for_attitude">false</param>
             <param name="imu_mounting_deg.yaw">0</param>
             <param name="imu_mounting_deg.pitch">0</param>
             <param name="imu_mounting_deg.roll">0</param>
