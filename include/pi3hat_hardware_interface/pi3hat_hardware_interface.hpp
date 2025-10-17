@@ -107,7 +107,7 @@ namespace pi3hat_hardware_interface
         std::unique_ptr<rclcpp::Logger> logger_;
 
         /* Number of controllers/joints */
-        int joint_controller_number_;
+        size_t joint_controller_number_;
 
         /* PART FOR COMMUNICATION WITH HARDWARE: */
 
@@ -164,9 +164,9 @@ namespace pi3hat_hardware_interface
 
         void controllers_make_queries();
 
-        void controllers_get_states();
+        void controllers_get_states(size_t current_can_size);
 
-        void create_controller_joint_map();
+        void create_controller_joint_map(std::vector<uint32_t>& can_ids);
 
         /* FUNCTIONS FOR CREATING TRANSMISSION OBJECTS:*/
 
