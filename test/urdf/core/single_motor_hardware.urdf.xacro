@@ -23,6 +23,7 @@
         <state_interface name="effort"/>
         <state_interface name="temperature"/>
         <state_interface name="fault"/>
+        <state_interface name="motor_effort"/>
       </joint>
   </xacro:macro>
 </robot>

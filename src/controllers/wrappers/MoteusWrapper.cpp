@@ -94,11 +94,11 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     moteus_options.id = params.id_;
 
     /* Moteus command format (it will be copied to wrapper) */
-    mjbots::moteus::PositionMode::Format format;
-    format.feedforward_torque = mjbots::moteus::kFloat;
-    format.maximum_torque = mjbots::moteus::kFloat;
-    format.velocity_limit= mjbots::moteus::kFloat;
-    moteus_options.position_format = format;
+    mjbots::moteus::PositionMode::Format command_format;
+    command_format.feedforward_torque = mjbots::moteus::kFloat;
+    command_format.maximum_torque = mjbots::moteus::kFloat;
+    command_format.velocity_limit= mjbots::moteus::kFloat;
+    moteus_options.position_format = command_format;
 
     /* Moteus command (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Command moteus_command;

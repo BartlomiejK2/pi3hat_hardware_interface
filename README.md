@@ -21,6 +21,7 @@ for inspiration and making this work much more easier!
   -  effort [`Nm`]
   -  temperature [`Celcius`]
   -  fault [`int`]
+  -  motor_effort (effort of motor, not joint) [`Nm`]
 - :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
   - orientation (`x`, `y`, `z` and `w`)
   - angular velocity (`x`, `y`, `z`) [`radians/s`]
@@ -122,15 +123,16 @@ colcon build --packages-select pi3hat_hardware_interface
   <param name="motor_torque_max">1.0</param>
 
 
-  <command_interface name="position"/>
-  <command_interface name="velocity"/>
-  <command_interface name="effort"/>
+  <command_interface name = "position"/>
+  <command_interface name = "velocity"/>
+  <command_interface name = "effort"/>
 
   <state_interface name = "position"/>
   <state_interface name = "velocity"/>
   <state_interface name = "effort"/>
   <state_interface name = "temperature"/>
   <state_interface name = "fault"/>
+  <state_interface name = "motor_effort"/>
 </joint>
 ...
 ```

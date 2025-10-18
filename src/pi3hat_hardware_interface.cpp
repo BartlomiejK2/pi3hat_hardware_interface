@@ -324,6 +324,7 @@ std::vector<hardware_interface::CommandInterface> Pi3HatHardwareInterface::expor
         }
         for(const auto& command_interface: info_.joints[i].command_interfaces)
         {
+            RCLCPP_INFO(*logger_, "%s joint has command interface: %s", info_.joints[i].name.c_str(), command_interface.name.c_str());
             if(command_interface.name == hardware_interface::HW_IF_POSITION)
             {
                 command_interfaces.emplace_back(hardware_interface::CommandInterface(
@@ -362,6 +363,7 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
         }
         for(const auto& state_interface: info_.joints[i].state_interfaces)
         {
+            RCLCPP_INFO(*logger_, "%s joint has state interface: %s", info_.joints[i].name.c_str(), state_interface.name.c_str());
             if(state_interface.name == hardware_interface::HW_IF_POSITION)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -386,6 +388,11 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, "fault", &(joint_states_[i].fault_)));
+            }
+            else if(state_interface.name == "motor_effort")
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, "motor_effort", &(controller_states_[i].torque_)));
             }
             else
             {
