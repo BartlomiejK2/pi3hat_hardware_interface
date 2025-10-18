@@ -21,7 +21,7 @@ for inspiration and making this work much more easier!
   -  effort [`Nm`]
   -  temperature [`Celcius`]
   -  fault [`int`]
-  -  motor_effort (effort of motor, not joint) [`Nm`]
+  -  motor effort (effort of motor, not joint) [`Nm`]
 - :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
   - orientation (`x`, `y`, `z` and `w`)
   - angular velocity (`x`, `y`, `z`) [`radians/s`]
