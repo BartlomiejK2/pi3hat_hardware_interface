@@ -18,16 +18,18 @@
 #include "3rd_libs/moteus/moteus.h"
 #include <memory>
 
+
+
 namespace controller_interface
 {
+
+/* Const coefficients for easy radians - rotations transform */
+constexpr static double rotation_to_radians = 2 * M_PI;
+constexpr static double radians_to_rotation = 1 / (2 * M_PI); /* Multiplying is faster than dividing */
 
 class MoteusWrapper final: public ControllerWrapper 
 {
     private:
-
-    /* Const coefficients for easy radians - rotations transform */
-    constexpr static double rotation_to_radians_ = 2 * M_PI;
-    constexpr static double radians_to_rotation_ = 1 / (2 * M_PI); /* Multiplying is faster than dividing */
 
     /* Command structure for moteus object*/
     mjbots::moteus::PositionMode::Command position_command_;
