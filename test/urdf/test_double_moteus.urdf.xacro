@@ -171,6 +171,8 @@
           <state_interface name = "velocity"/>
           <state_interface name = "effort"/>
           <state_interface name = "temperature"/>
+          <state_interface name="fault"/>
+          <state_interface name="motor_effort"/>
       </joint>
 
       <joint name="joint_2">
@@ -195,6 +197,8 @@
           <state_interface name = "velocity"/>
           <state_interface name = "effort"/>
           <state_interface name = "temperature"/>
+          <state_interface name="fault"/>
+          <state_interface name="motor_effort"/>
       </joint>
       <transmission name="fbl_transmission">
           <plugin>transmission_interface/FourBarLinkageTransmission</plugin>

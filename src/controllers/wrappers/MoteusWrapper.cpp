@@ -27,8 +27,8 @@ MoteusWrapper::MoteusWrapper(
 void MoteusWrapper::command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) 
 {
     /* Change command values */
-    position_command_.position = command.position_ * radians_to_rotation_;
-    position_command_.velocity = command.velocity_ * radians_to_rotation_;
+    position_command_.position = command.position_ * radians_to_rotation;
+    position_command_.velocity = command.velocity_ * radians_to_rotation;
     position_command_.feedforward_torque = command.torque_;
 
     /* Create CANFD frame */
@@ -59,8 +59,8 @@ void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState&
     if(((rx_frame.id >> 8) & 0x7f) != (uint32_t) moteus_controller_.options().id) return; /* This should not happen! (map frame to wrapper first) */
 
     mjbots::moteus::Query::Result result = mjbots::moteus::Query::Parse(rx_frame.data, rx_frame.size);
-    state.position_ = result.position * rotation_to_radians_;
-    state.velocity_ = result.velocity * rotation_to_radians_;
+    state.position_ = result.position * rotation_to_radians;
+    state.velocity_ = result.velocity * rotation_to_radians;
     state.torque_ = result.torque;
     state.temperature_ = result.temperature;
     state.fault_ = static_cast<double>(result.fault);
@@ -94,16 +94,16 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     moteus_options.id = params.id_;
 
     /* Moteus command format (it will be copied to wrapper) */
-    mjbots::moteus::PositionMode::Format format;
-    format.feedforward_torque = mjbots::moteus::kFloat;
-    format.maximum_torque = mjbots::moteus::kFloat;
-    format.velocity_limit= mjbots::moteus::kFloat;
-    moteus_options.position_format = format;
+    mjbots::moteus::PositionMode::Format command_format;
+    command_format.feedforward_torque = mjbots::moteus::kFloat;
+    command_format.maximum_torque = mjbots::moteus::kFloat;
+    command_format.velocity_limit= mjbots::moteus::kFloat;
+    moteus_options.position_format = command_format;
 
     /* Moteus command (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Command moteus_command;
     moteus_command.maximum_torque = params.torque_max_;
-    //moteus_command.velocity_limit = params.velocity_max_; // Creates error, check later
+    moteus_command.velocity_limit = params.velocity_max_ * radians_to_rotation; // Creates error, check later
 
     controller_interface::MoteusWrapper moteus_wrapper(moteus_options, moteus_command);
     std::unique_ptr<controller_interface::MoteusWrapper> moteus_wrapper_ptr = std::make_unique<controller_interface::MoteusWrapper>(moteus_wrapper);

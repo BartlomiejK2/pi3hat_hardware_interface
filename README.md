@@ -4,7 +4,8 @@
 
 This project provides a `ros2_control` `SystemInterface` for mjbots [pi3hat](https://mjbots.com/products/mjbots-pi3hat-r4-5).\
 Huge thanks to [Gabrael Levine](https://github.com/G-Levine) and his version of [pi3hat_hardware_interface](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main)
-for inspiration and making this work much more easier!
+for inspiration and making this work much more easier! 
+#### :warning: IMPORTANT: Before using this hardware interface, please read this README and be careful with text written as IMPORTANT!
 
 ### Software supports:
 - :ballot_box_with_check: Different kinds of controllers (for making wrapper for your kind of controller check below)
@@ -21,6 +22,7 @@ for inspiration and making this work much more easier!
   -  effort [`Nm`]
   -  temperature [`Celcius`]
   -  fault [`int`]
+  -  motor effort (effort of motor, not joint) [`Nm`]
 - :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
   - orientation (`x`, `y`, `z` and `w`)
   - angular velocity (`x`, `y`, `z`) [`radians/s`]
@@ -96,7 +98,7 @@ colcon build --packages-select pi3hat_hardware_interface
   ...
 </ros2_control>
 ```
-`wait_for_attitude` - Wait for attitude data [`bool`]\ 
+`wait_for_attitude` - Wait for attitude data [`bool`]
 #### :warning: IMPORTANT: Setting `wait_for_attitude` to `true` can result stalls on CPU!
 `imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [`degrees`]\
 `imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [`Hz`]\
@@ -122,15 +124,16 @@ colcon build --packages-select pi3hat_hardware_interface
   <param name="motor_torque_max">1.0</param>
 
 
-  <command_interface name="position"/>
-  <command_interface name="velocity"/>
-  <command_interface name="effort"/>
+  <command_interface name = "position"/>
+  <command_interface name = "velocity"/>
+  <command_interface name = "effort"/>
 
   <state_interface name = "position"/>
   <state_interface name = "velocity"/>
   <state_interface name = "effort"/>
   <state_interface name = "temperature"/>
   <state_interface name = "fault"/>
+  <state_interface name = "motor_effort"/>
 </joint>
 ...
 ```
@@ -144,7 +147,8 @@ colcon build --packages-select pi3hat_hardware_interface
 `motor_direction` - Motor direction (1 or -1)\
 `motor_position_offset` - Motor position offset, will be added to commanded position before sending to controller [`radians`]\
 `motor_position_max/min` - Motor max/min position [`radians`]\
-`motor_velocity_max` - Motor maximal velocity [`radians`]\
+`motor_velocity_max` - Motor maximal velocity [`radians / s`]
+#### :warning: VERY IMPORTANT: Before using hardware interface, set `servo.default_velocity_limit` and `servo.default_accel_limit` to values other than NOT NaN in your moteus (reference how to do it via `tview` or `moteus_tool`)[https://github.com/mjbots/moteus/blob/main/docs/reference.md].
 `motor_torque_max` - Motor maximal torque [`Nm`]
 
 ## Testing 
