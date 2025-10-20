@@ -97,7 +97,7 @@ colcon build --packages-select pi3hat_hardware_interface
   ...
 </ros2_control>
 ```
-`wait_for_attitude` - Wait for attitude data [`bool`]\ 
+`wait_for_attitude` - Wait for attitude data [`bool`]
 #### :warning: IMPORTANT: Setting `wait_for_attitude` to `true` can result stalls on CPU!
 `imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [`degrees`]\
 `imu_sampling_rate` - IMU rate for attitude sampling (400 or 1000 are the best) [`Hz`]\
@@ -146,7 +146,8 @@ colcon build --packages-select pi3hat_hardware_interface
 `motor_direction` - Motor direction (1 or -1)\
 `motor_position_offset` - Motor position offset, will be added to commanded position before sending to controller [`radians`]\
 `motor_position_max/min` - Motor max/min position [`radians`]\
-`motor_velocity_max` - Motor maximal velocity [`radians`]\
+`motor_velocity_max` - Motor maximal velocity [`radians / s`]
+#### :warning: VERY IMPORTANT: Before using hardware interface, set `servo.default_velocity_limit` and `servo.default_accel_limit` to values other than NOT NaN in your moteus (reference how to do it via `tview` or `moteus_tool`)[https://github.com/mjbots/moteus/blob/main/docs/reference.md].
 `motor_torque_max` - Motor maximal torque [`Nm`]
 
 ## Testing 
