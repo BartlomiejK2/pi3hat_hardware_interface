@@ -158,6 +158,8 @@ class Pi3Hat {
 
     CanRateOverride std_rate;
     CanRateOverride fd_rate;
+
+    uint32_t cancel_all_ms = 50;
   };
 
   struct Configuration {
@@ -280,6 +282,13 @@ class Pi3Hat {
     ProcessorInfo can1;
     ProcessorInfo can2;
     ProcessorInfo aux;
+
+    // Is it safe to send frames that may never be acknowledged?  Some
+    // older firmware versions became effectively "frozen" if a CAN
+    // frame was sent that was never acknowledged, either because no
+    // device whatsoever was connected to the bus or because nothing
+    // acknowledged the given ID.
+    bool can_unknown_address_safe = false;
   };
 
   DeviceInfo device_info();

@@ -225,10 +225,19 @@ class TimeoutTransport : public Transport {
   struct Options {
     bool disable_brs = false;
 
-    uint32_t min_ok_wait_ns = 1000000;
-    uint32_t min_rcv_wait_ns = 5000000;
+    // Wait at least this long for the initial OK.
+    uint32_t min_ok_wait_ns = 2000000;
 
-    uint32_t rx_extra_wait_ns = 5000000;
+    // And wait at least this long for any expected reply packet.
+    uint32_t min_rcv_wait_ns = 50000000;
+
+    // After we have received a reply packet, and are still expecting
+    // more, wait at least this long for every new receipt.
+    uint32_t rx_extra_wait_ns = 50000000;
+
+    // And after we have received all "expected" things, wait this
+    // much longer for anything "more" that might come around.
+    uint32_t final_wait_ns = 50000;
 
     // Send at most this many frames before waiting for responses.  -1
     // means no limit.
@@ -284,6 +293,17 @@ class TimeoutTransport : public Transport {
     }
   }
 
+  static size_t RoundUpDlc(size_t size) {
+    if (size <= 8) { return size; }
+    if (size <= 12) { return 12; }
+    if (size <= 16) { return 16; }
+    if (size <= 20) { return 20; }
+    if (size <= 24) { return 24; }
+    if (size <= 32) { return 32; }
+    if (size <= 48) { return 48; }
+    if (size <= 64) { return 64; }
+    return size;
+  }
 
  protected:
   virtual int CHILD_GetReadFd() const = 0;
@@ -360,7 +380,7 @@ class TimeoutTransport : public Transport {
         (read_delay == kWait ?
          std::max(expected_ok_count != 0 ? t_options_.min_ok_wait_ns : 0,
                   any_reply_checker() ? t_options_.min_rcv_wait_ns : 0) :
-         5000);
+         t_options_.final_wait_ns);
 
     struct pollfd fds[1] = {};
     fds[0].fd = CHILD_GetReadFd();
@@ -708,18 +728,6 @@ class Fdcanusb : public details::TimeoutTransport {
     tx_buffer_size_ = 0;
   }
 
-  static size_t RoundUpDlc(size_t size) {
-    if (size <= 8) { return size; }
-    if (size <= 12) { return 12; }
-    if (size <= 16) { return 16; }
-    if (size <= 20) { return 20; }
-    if (size <= 24) { return 24; }
-    if (size <= 32) { return 32; }
-    if (size <= 48) { return 48; }
-    if (size <= 64) { return 64; }
-    return size;
-  }
-
   static int ParseHexNybble(char c) {
     if (c >= '0' && c <= '9') { return c - '0'; }
     if (c >= 'a' && c <= 'f') { return c - 'a' + 10; }
@@ -828,8 +836,12 @@ class Socketcan : public details::TimeoutTransport {
       // Set the frame format flag if we need an extended ID.
       send_frame.can_id |= (1 << 31);
     }
-    send_frame.len = frame.size;
+    send_frame.len = RoundUpDlc(frame.size);
     std::memcpy(send_frame.data, frame.data, frame.size);
+    if (send_frame.len != frame.size) {
+      std::memset(&send_frame.data[frame.size], 0x50,
+                  send_frame.len - frame.size);
+    }
 
     using F = CanFdFrame;
 

@@ -18,6 +18,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -33,8 +34,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <bcm_host.h>
 
 char g_data_block[4096] = {};
 
@@ -153,6 +152,43 @@ bool StartsWith(const std::string& value, const std::string& maybe_prefix) {
   return value.substr(0, maybe_prefix.size()) == maybe_prefix;
 }
 
+uint64_t host_get_peripheral_address() {
+  FILE *fp = nullptr;
+  char buf[1024] = {};
+
+  fp = fopen("/proc/device-tree/model", "r");
+  if (!fp) {
+    throw Error("Unable to open /proc/device-tree/model");
+  }
+
+  if (fgets(buf, sizeof(buf), fp) == NULL) {
+    fclose(fp);
+    throw Error("Unable to read /proc/device-tree/model");
+  }
+  fclose(fp);
+
+  const int model = [&]() {
+    int version = -1;
+    if (sscanf(buf, "Raspberry Pi %d ", &version) == 1) {
+      return version;
+    }
+    if (sscanf(buf, "Raspberry Pi Compute Module %d ", &version) == 1) {
+      return version;
+    }
+    throw Error(std::string("Unable to parse rpi version: ") + buf);
+  }();
+
+  // Return hard-coded values for known versions.
+  if (model == 4) {
+    return 0xfe000000UL;
+  } else if (model < 4) {
+    // Pi 3, 2, 1, Zero, Model A/B
+    return 0x3f000000UL;
+  }
+
+  throw Error(std::string("Unsupported Raspberry Pi: ") + buf);
+}
+
 ///////////////////////////////////////////////
 /// Random utility classes
 
@@ -252,7 +288,7 @@ class Rpi3Gpio {
   // static constexpr uint32_t ALT_5 = 2;
 
   Rpi3Gpio(int dev_mem_fd)
-      : mmap_(dev_mem_fd, 4096, bcm_host_get_peripheral_address() + GPIO_BASE),
+      : mmap_(dev_mem_fd, 4096, host_get_peripheral_address() + GPIO_BASE),
         gpio_(reinterpret_cast<volatile uint32_t*>(mmap_.ptr())) {}
 
   void SetGpioMode(uint32_t gpio, uint32_t function) {
@@ -332,7 +368,7 @@ class PrimarySpi {
     ThrowIfErrno(fd_ < 0, "pi3hat: could not open /dev/mem");
 
     spi_mmap_ = SystemMmap(
-        fd_, 4096, bcm_host_get_peripheral_address() + SPI_BASE);
+        fd_, 4096, host_get_peripheral_address() + SPI_BASE);
     spi_ = reinterpret_cast<volatile Bcm2835Spi*>(
         static_cast<char*>(spi_mmap_.ptr()));
 
@@ -517,7 +553,7 @@ class AuxSpi {
     ThrowIfErrno(fd_ < 0, "rpi3_aux_spi: could not open /dev/mem");
 
     spi_mmap_ = SystemMmap(
-        fd_, 4096, bcm_host_get_peripheral_address() + AUX_BASE);
+        fd_, 4096, host_get_peripheral_address() + AUX_BASE);
     auxenb_ = reinterpret_cast<volatile uint32_t*>(
         static_cast<char*>(spi_mmap_.ptr()) + 0x04);
     spi_ = reinterpret_cast<volatile Bcm2835AuxSpi*>(
@@ -875,6 +911,19 @@ struct DeviceCanConfiguration {
   }
 } __attribute__((packed));
 
+struct DeviceCanConfigurationV4 : DeviceCanConfiguration {
+  uint32_t cancel_all_ms = 50;
+
+  bool operator==(const DeviceCanConfigurationV4& rhs) const {
+    return DeviceCanConfiguration::operator==(rhs) &&
+        cancel_all_ms == rhs.cancel_all_ms;
+  }
+
+  bool operator!=(const DeviceCanConfigurationV4& rhs) const {
+    return !(*this == rhs);
+  }
+} __attribute__((packed));
+
 template <typename Spi>
 Pi3Hat::ProcessorInfo GetProcessorInfo(Spi* spi, int cs) {
   DeviceDeviceInfo di;
@@ -1030,7 +1079,7 @@ class Pi3Hat::Impl {
     if (version < 3) { return; }
 
     // Populate what we want our config to look like.
-    DeviceCanConfiguration out;
+    DeviceCanConfigurationV4 out;
     out.slow_bitrate = can_config.slow_bitrate;
     out.fast_bitrate = can_config.fast_bitrate;
     out.fdcan_frame = can_config.fdcan_frame ? 1 : 0;
@@ -1048,11 +1097,15 @@ class Pi3Hat::Impl {
     out.fd_rate.time_seg1 = can_config.fd_rate.time_seg1;
     out.fd_rate.time_seg2 = can_config.fd_rate.time_seg2;
 
+    out.cancel_all_ms = can_config.cancel_all_ms;
+
     // Check to see if this is what is already there.
-    DeviceCanConfiguration original_config;
+    DeviceCanConfigurationV4 original_config;
+    const auto spi_size = version <= 3 ?
+        sizeof(DeviceCanConfiguration) :
+        sizeof(DeviceCanConfigurationV4);
     spi->Read(cs, canbus ? 8 : 7,
-              reinterpret_cast<char*>(&original_config),
-              sizeof(original_config));
+              reinterpret_cast<char*>(&original_config), spi_size);
     if (original_config == out) {
       // We have nothing to do, so just bail early.
       return;
@@ -1060,13 +1113,13 @@ class Pi3Hat::Impl {
 
     // Update the configuration on the device.
     spi->Write(cs, canbus ? 10 : 9,
-               reinterpret_cast<const char*>(&out), sizeof(out));
+               reinterpret_cast<const char*>(&out), spi_size);
 
     // Give it some time to work.
     ::usleep(100);
     DeviceCanConfiguration verify;
     spi->Read(cs, canbus ? 8 : 7,
-              reinterpret_cast<char*>(&verify), sizeof(verify));
+              reinterpret_cast<char*>(&verify), spi_size);
     ThrowIf(
         out != verify,
         [&]() {
@@ -1110,10 +1163,10 @@ class Pi3Hat::Impl {
   template <typename Spi>
   void TestCan(Spi* spi, int cs, const char* name) {
     const auto version = ReadByte(spi, cs, 0);
-    if (version != 2 && version != 3) {
+    if (version != 2 && version != 3 && version != 4) {
       throw std::runtime_error(
           Format(
-              "Processor '%s' has incorrect CAN SPI version %d != [2,3]",
+              "Processor '%s' has incorrect CAN SPI version %d != [2,3,4]",
               name, version));
     }
   }
@@ -1156,6 +1209,19 @@ class Pi3Hat::Impl {
     if (config_.enable_aux) {
       result.aux = GetProcessorInfo(&primary_spi_, 0);
     }
+
+    // Verify all the CAN protocols for "unknown address safety".
+    const auto can1_can_protocol = ReadByte(&aux_spi_, 0, 0);
+    const auto can2_can_protocol = ReadByte(&aux_spi_, 1, 0);
+    const auto aux_can_protocol =
+        config_.enable_aux ?
+        ReadByte(&primary_spi_, 0, 0) : can1_can_protocol;
+
+    result.can_unknown_address_safe =
+        (can1_can_protocol > 3) &&
+        (can2_can_protocol > 3) &&
+        (aux_can_protocol > 3);
+
     return result;
   }
 
