@@ -4,7 +4,8 @@
 
 This project provides a `ros2_control` `SystemInterface` for mjbots [pi3hat](https://mjbots.com/products/mjbots-pi3hat-r4-5).\
 Huge thanks to [Gabrael Levine](https://github.com/G-Levine) and his version of [pi3hat_hardware_interface](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main)
-for inspiration and making this work much more easier!
+for inspiration and making this work much more easier! 
+#### :warning: IMPORTANT: Before using this hardware interface, please read this README and be careful with text written as IMPORTANT!
 
 ### Software supports:
 - :ballot_box_with_check: Different kinds of controllers (for making wrapper for your kind of controller check below)
