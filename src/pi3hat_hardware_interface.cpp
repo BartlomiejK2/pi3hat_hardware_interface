@@ -444,7 +444,7 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
 
 hardware_interface::return_type Pi3HatHardwareInterface::write(const rclcpp::Time &time, const rclcpp::Duration &period)
 {
-    if (first_write_pass_ || (time - last_write_time_ ) >= desired_update_period_)
+    if (first_write_pass_ || (time - last_write_time_) >= desired_update_period_)
     {
         first_write_pass_ = false;
         last_write_time_ = time;
