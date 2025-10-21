@@ -95,7 +95,6 @@ target_link_libraries(
   PUBLIC pi3hat
   PUBLIC controllers
   PUBLIC imu_transform
-  PUBLIC bcm_host
 )
 
 ament_target_dependencies(

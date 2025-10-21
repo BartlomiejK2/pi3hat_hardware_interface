@@ -49,15 +49,11 @@ for inspiration and making this work much more easier!
 ```bash
 git clone https://github.com/BartlomiejK2/pi3hat_hardware_interface.git
 ```
-2. Create link to library `bcm_host`:
-```bash
-sudo ln /usr/lib/aarch64-linux-gnu/libbcm_host.so /usr/lib/libbcm_host.so.0
-```
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 rosdep install --ignore-src --from-paths . -y -r
 ```
-5. Build (only works on Raspberry Pi):
+3. Build (only works on Raspberry Pi):
 ```bash
 colcon build --packages-select pi3hat_hardware_interface
 ```
@@ -178,7 +174,14 @@ sudo double_wrapper_"type"_test
 ```
 
 ## Troubleshooting
-#### Check out Gabrael Levine [Troubleshooting](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main?tab=readme-ov-file#troubleshooting). 
+
+### Problems with `bcm_host` library:
+Create link to library `bcm_host`:
+```bash
+sudo ln /usr/lib/aarch64-linux-gnu/libbcm_host.so /usr/lib/libbcm_host.so.0
+```
+
+### Other problems: check out Gabrael Levine [Troubleshooting](https://github.com/G-Levine/pi3hat_hardware_interface/tree/main?tab=readme-ov-file#troubleshooting). 
 
 ## Contributing
 
