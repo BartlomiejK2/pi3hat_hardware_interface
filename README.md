@@ -65,6 +65,7 @@ colcon build --packages-select pi3hat_hardware_interface
 <ros2_control name="pi3hat_hardware_interface" type="system">
   <hardware>
     <plugin>pi3hat_hardware_interface/Pi3HatHardwareInterface</plugin>
+    <param name="update_rate">500</param>
     <param name="wait_for_attitude">false</param>
     <param name="imu_mounting_deg.yaw">0</param>
     <param name="imu_mounting_deg.pitch">0</param>
@@ -94,6 +95,7 @@ colcon build --packages-select pi3hat_hardware_interface
   ...
 </ros2_control>
 ```
+`update_rate` - update rate [`Hz`] (should be equal to or less than update rate for controller manager)
 `wait_for_attitude` - Wait for attitude data [`bool`]
 #### :warning: IMPORTANT: Setting `wait_for_attitude` to `true` can result stalls on CPU!
 `imu_mounting_deg.*` - IMU RPY mouting relative to fixed link [`degrees`]\

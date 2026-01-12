@@ -28,6 +28,11 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     logger_ = std::make_unique<rclcpp::Logger>(
     rclcpp::get_logger("Pi3HatHardwareInterface"));
 
+    size_t update_rate_Hz = std::abs(std::stoi(info_.hardware_parameters.at("update_rate")));
+    std::chrono::nanoseconds update_period_ns(static_cast<int64_t>
+        ((1 / static_cast<double>(update_rate_Hz)) * 1e+9));
+    desired_update_period_ = rclcpp::Duration(update_period_ns);
+
     joint_controller_number_ = info_.joints.size();
 
     controller_commands_.resize(joint_controller_number_);
@@ -85,7 +90,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     /* Set the mounting orientation of the IMU */
     try
     {
-        config.attitude_rate_hz = std::stoi(info_.hardware_parameters.at("imu_sampling_rate"));
+        config.attitude_rate_hz = std::abs(std::stoi(info_.hardware_parameters.at("imu_sampling_rate")));
         config.mounting_deg.yaw = std::stod(info_.hardware_parameters.at("imu_mounting_deg.yaw"));
         config.mounting_deg.pitch = std::stod(info_.hardware_parameters.at("imu_mounting_deg.pitch"));
         config.mounting_deg.roll = std::stod(info_.hardware_parameters.at("imu_mounting_deg.roll"));
@@ -439,39 +444,47 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
 
 hardware_interface::return_type Pi3HatHardwareInterface::write(const rclcpp::Time &time, const rclcpp::Duration &period)
 {
-    for (size_t i = 0; i < joint_controller_number_; ++i)
+    if (first_write_pass_ || (time - last_write_time_) >= desired_update_period_)
     {
-        if (std::isnan(joint_commands_[i].position_) || std::isnan(joint_commands_[i].velocity_) || std::isnan(joint_commands_[i].torque_))
+        first_write_pass_ = false;
+        last_write_time_ = time;
+
+        for (size_t i = 0; i < joint_controller_number_; ++i)
         {
-            RCLCPP_WARN(*logger_, "NaN command for actuator");
-            break;
+            if (std::isnan(joint_commands_[i].position_) || 
+                std::isnan(joint_commands_[i].velocity_) || 
+                std::isnan(joint_commands_[i].torque_))
+            {
+                RCLCPP_WARN(*logger_, "NaN command for actuator");
+                break;
+            }
         }
-    }
 
-    joint_to_controller_transform();
+        joint_to_controller_transform();
 
-    controllers_make_commands();
+        controllers_make_commands();
     
-    mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
+        mjbots::pi3hat::Pi3Hat::Output result = pi3hat_->Cycle(pi3hat_input_);
 
-    if(result.error)
-    {
-        RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"write()\"!");
-        RCLCPP_ERROR(*logger_, "Error flag: %d", result.error);
-        return hardware_interface::return_type::ERROR;
+        if(result.error)
+        {
+            RCLCPP_ERROR(*logger_, "Pi3Hat::Cycle() failed on \"write()\"!");
+            RCLCPP_ERROR(*logger_, "Error flag: %d", result.error);
+            return hardware_interface::return_type::ERROR;
+        }
+
+        if (result.attitude_present)
+        {
+            imu_transform_.transform_attitude(attitude_);
+        }
+
+        if(result.rx_can_size > 0)
+        {
+            controllers_get_states(result.rx_can_size);
+        }
+
+        controller_to_joint_transform();
     }
-
-    if (result.attitude_present)
-    {
-        imu_transform_.transform_attitude(attitude_);
-    }
-
-    if(result.rx_can_size > 0)
-    {
-        controllers_get_states(result.rx_can_size);
-    }
-
-    controller_to_joint_transform();
     
     return hardware_interface::return_type::OK;
 }
@@ -709,8 +722,8 @@ ControllerParameters Pi3HatHardwareInterface::get_controller_parameters(const ha
     ControllerParameters params;
     try
     {
-        params.bus_ = std::stoi(joint_info.parameters.at("controller_can_bus"));
-        params.id_ = std::stoi(joint_info.parameters.at("controller_can_id"));
+        params.bus_ = std::abs(std::stoi(joint_info.parameters.at("controller_can_bus")));
+        params.id_ = std::abs(std::stoi(joint_info.parameters.at("controller_can_id")));
         params.direction_ = std::stoi(joint_info.parameters.at("motor_direction"));
         params.position_offset_ = std::stod(joint_info.parameters.at("motor_position_offset"));
         params.position_max_ = std::stod(joint_info.parameters.at("motor_position_max"));

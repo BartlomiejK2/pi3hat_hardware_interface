@@ -153,6 +153,10 @@ namespace pi3hat_hardware_interface
         /* For transmission interface */
         std::vector<JointCommand> joint_transmission_passthrough_;
 
+        /* Variables for custom update rate */
+        rclcpp::Duration desired_update_period_;
+        bool first_write_pass_ = true;
+        rclcpp::Time last_write_time_;
 
         /* FUNCTION FOR INITIALIZATION */
         controller_interface::ControllerParameters get_controller_parameters(const hardware_interface::ComponentInfo& joint_info);
