@@ -16,13 +16,32 @@ for inspiration and making this work much more easier!
   - position [`radians]`
   - velocity [`radians/s`]
   - effort [`Nm`]
-- :ballot_box_with_check: 5 joint state interfaces:
-  -  position [`radians/s`]
+- :ballot_box_with_check: 3 joint state interfaces:
+  -  position [`radians`]
   -  velocity [`radians/s`]
   -  effort [`Nm`]
+- :ballot_box_with_check: 3 motor state interfaces:
+  -  motor_position [`radians`]
+  -  motor_velocity [`radians/s`]
+  -  motor_effort [`Nm`]
+- :ballot_box_with_check: 5 additonal joint state interfaces:
+  -  desired_position [`radians`]
+  -  desired_velocity [`radians/s`]
+  -  desired_effort [`Nm`]
+  -  position_error [`radians`]
+  -  velocity_error [`radians/s`]
+- :ballot_box_with_check: 5 additonal motor state interfaces:
+  -  motor_desired_position [`radians`]
+  -  motor_desired_velocity [`radians/s`]
+  -  motor_desired_effort [`Nm`]
+  -  motor_position_error [`radians`]
+  -  motor_velocity_error [`radians/s`]
+- :ballot_box_with_check: 5 additonal diagnostic state interfaces:
   -  temperature [`Celcius`]
+  -  voltage [`Volts`]
+  -  current [`Ampere`]
+  -  power [`Wat`]
   -  fault [`int`]
-  -  motor effort (effort of motor, not joint) [`Nm`]
 - :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
   - orientation (`x`, `y`, `z` and `w`)
   - angular velocity (`x`, `y`, `z`) [`radians/s`]
@@ -102,7 +121,7 @@ colcon build --packages-select pi3hat_hardware_interface
 `can_X_automatic_retransmission` - Using automatic retransmission in X CAN bus [`bool`]\
 `can_X_bitrate_switch` - Using bitrate switch in X CAN bus [`bool`]
 
-### Controller/Motor options:
+### Controller/Motor options and interfaces:
 
 ```xml
 ...
@@ -119,17 +138,46 @@ colcon build --packages-select pi3hat_hardware_interface
   <param name="motor_velocity_max">10.0</param>
   <param name="motor_torque_max">1.0</param>
 
-
+  <!-- Command interfaces for controlling joints -->
   <command_interface name = "position"/>
   <command_interface name = "velocity"/>
   <command_interface name = "effort"/>
 
+  <!-- State interfaces for joints state -->
   <state_interface name = "position"/>
   <state_interface name = "velocity"/>
   <state_interface name = "effort"/>
-  <state_interface name = "temperature"/>
-  <state_interface name = "fault"/>
+
+  <!-- State interfaces for joints command (read-only copy of joint commands) -->
+  <state_interface name = "desired_position"/>
+  <state_interface name = "desired_velocity"/>
+  <state_interface name = "desired_effort"/>
+
+  <!-- State interfaces for joints error (joint_command - joint_state) -->
+  <state_interface name = "position_error"/>
+  <state_interface name = "velocity_error"/>
+
+  <!-- State interfaces for motors state -->
+  <state_interface name = "motor_position"/>
+  <state_interface name = "motor_velocity"/>
   <state_interface name = "motor_effort"/>
+
+  <!-- State interfaces for motors command (read-only copy of joint commands 
+       transformed via transmissions) -->
+  <state_interface name = "motor_desired_position"/>
+  <state_interface name = "motor_desired_velocity"/>
+  <state_interface name = "motor_desired_effort"/>
+
+  <!-- State interfaces for motors error (motor_command - motor_state) -->
+  <state_interface name = "motor_position_error"/>
+  <state_interface name = "motor_velocity_error"/>
+
+  <!-- Additional states for controller -->
+  <state_interface name = "temperature"/>
+  <state_interface name = "voltage"/>
+  <state_interface name = "current"/>
+  <state_interface name = "power"/>
+  <state_interface name = "fault"/>
 </joint>
 ...
 ```

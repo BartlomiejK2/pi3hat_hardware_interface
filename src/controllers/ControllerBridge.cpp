@@ -69,9 +69,10 @@ void ControllerBridge::make_query(CanFrame& tx_frame) const
     wrapper_->query_to_tx_frame(tx_frame);
 }
 
-void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& state) const
+void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& state, 
+    ControllerDiagnostics& diagnostics) const
 {
-    wrapper_->rx_frame_to_state(rx_frame, state);
+    wrapper_->rx_frame_to_state(rx_frame, state, diagnostics);
 
     /* Basic transformations after getting data from wrapper */
     state.position_ = params_.direction_ * (state.position_ - params_.position_offset_);

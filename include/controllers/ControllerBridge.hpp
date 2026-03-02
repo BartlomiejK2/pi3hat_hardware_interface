@@ -53,7 +53,8 @@ class ControllerBridge
     void make_query(CanFrame& tx_frame) const;
 
     /* Transform RX CAN frame to controller state */
-    void get_state(const CanFrame& rx_frame, ControllerState& state) const;
+    void get_state(const CanFrame& rx_frame, ControllerState& state, 
+        ControllerDiagnostics& diagnostics) const;
 
     /* Initialize controller */
     void initialize(CanFrame& tx_frame) const;

@@ -154,6 +154,10 @@ namespace pi3hat_hardware_interface
         std::vector<JointCommand> joint_transmission_passthrough_;
 
 
+        /* Diagnostics */
+        std::vector<controller_interface::ControllerDiagnostics> controller_diagnostics_;
+        std::vector<controller_interface::AdditionalDiagnostics> additional_diagnostics_;
+
         /* FUNCTION FOR INITIALIZATION */
         controller_interface::ControllerParameters get_controller_parameters(const hardware_interface::ComponentInfo& joint_info);
 
@@ -205,6 +209,8 @@ namespace pi3hat_hardware_interface
         bool string_to_bool(const std::string& str);
 
         void reset_joint_data();
+
+        void fill_diagnostics();
     }; 
 };
 

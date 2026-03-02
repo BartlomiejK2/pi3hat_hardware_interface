@@ -53,7 +53,8 @@ void MoteusWrapper::query_to_tx_frame(CanFrame& tx_frame)
     std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
 }
 
-void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) 
+void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state, 
+    ControllerDiagnostics& diagnostics) 
 {
     /* Parse data from RX CANFD Pi3hat frame to Result object */
     if(((rx_frame.id >> 8) & 0x7f) != (uint32_t) moteus_controller_.options().id) return; /* This should not happen! (map frame to wrapper first) */
@@ -62,8 +63,12 @@ void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState&
     state.position_ = result.position * rotation_to_radians;
     state.velocity_ = result.velocity * rotation_to_radians;
     state.torque_ = result.torque;
-    state.temperature_ = result.temperature;
-    state.fault_ = static_cast<double>(result.fault);
+    diagnostics.temperature_ = result.temperature;
+    diagnostics.fault_ = static_cast<double>(result.fault);
+    diagnostics.voltage_ = result.voltage;
+    diagnostics.power_ = result.power;
+    diagnostics.current_ = std::sqrt(result.d_current * result.d_current 
+        + result.q_current * result.q_current);
 }
 
 void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame) 
