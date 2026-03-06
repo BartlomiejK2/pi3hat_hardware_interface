@@ -101,7 +101,7 @@ namespace controller_interface
         constexpr char VELOCITY_ERROR[]     = "velocity_error";
         constexpr char DESIRED_POSITION[]   = "desired_position";
         constexpr char DESIRED_VELOCITY[]   = "desired_velocity";
-        constexpr char DESIRED_EFFORT[]     = "desired_velocity";
+        constexpr char DESIRED_EFFORT[]     = "desired_effort";
 
         /* Diagnostic motor state hardware interfaces */
         constexpr char MOTOR_POSITION_ERROR[]   = "motor_position_error";
