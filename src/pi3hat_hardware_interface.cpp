@@ -839,7 +839,7 @@ void Pi3HatHardwareInterface::controllers_get_states(size_t current_can_size)
     for(size_t i = 0; i < current_can_size; ++i)
     {
         int joint_id = controller_joint_map_.at(rx_can_frames_[i].id);
-        controller_bridges_[joint_id].get_state(rx_can_frames_[i], controller_states_[joint_id]);
+        controller_bridges_[joint_id].get_state(rx_can_frames_[i], controller_states_[joint_id], controller_diagnostics_[joint_id]);
     }
 }
 
