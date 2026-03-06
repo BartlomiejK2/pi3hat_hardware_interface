@@ -327,20 +327,20 @@ std::vector<hardware_interface::CommandInterface> Pi3HatHardwareInterface::expor
         for(const auto& command_interface: info_.joints[i].command_interfaces)
         {
             RCLCPP_INFO(*logger_, "%s joint has command interface: %s", info_.joints[i].name.c_str(), command_interface.name.c_str());
-            if(command_interface.name == hardware_interface::POSITION)
+            if(command_interface.name == hardware_interface_names::POSITION)
             {
                 command_interfaces.emplace_back(hardware_interface::CommandInterface(
-                    info_.joints[i].name, hardware_interface::POSITION, &(joint_commands_[i].position_)));
+                    info_.joints[i].name, hardware_interface_names::POSITION, &(joint_commands_[i].position_)));
             }
-            else if(command_interface.name == hardware_interface::VELOCITY)
+            else if(command_interface.name == hardware_interface_names::VELOCITY)
             {
                 command_interfaces.emplace_back(hardware_interface::CommandInterface(
-                    info_.joints[i].name, hardware_interface::VELOCITY, &(joint_commands_[i].velocity_)));
+                    info_.joints[i].name, hardware_interface_names::VELOCITY, &(joint_commands_[i].velocity_)));
             }
-            else if(command_interface.name == hardware_interface::EFFORT)
+            else if(command_interface.name == hardware_interface_names::EFFORT)
             {
                 command_interfaces.emplace_back(hardware_interface::CommandInterface(
-                    info_.joints[i].name, hardware_interface::EFFORT, &(joint_commands_[i].torque_)));
+                    info_.joints[i].name, hardware_interface_names::EFFORT, &(joint_commands_[i].torque_)));
             }
             else
             {
@@ -366,114 +366,114 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
         for(const auto& state_interface: info_.joints[i].state_interfaces)
         {
             RCLCPP_INFO(*logger_, "%s joint has state interface: %s", info_.joints[i].name.c_str(), state_interface.name.c_str());
-            if(state_interface.name == hardware_interface::POSITION)
+            if(state_interface.name == hardware_interface_names::POSITION)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::POSITION, &(joint_states_[i].position_)));
+                    info_.joints[i].name, hardware_interface_names::POSITION, &(joint_states_[i].position_)));
             }
-            else if(state_interface.name == hardware_interface::VELOCITY)
+            else if(state_interface.name == hardware_interface_names::VELOCITY)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::VELOCITY, &(joint_states_[i].velocity_)));
+                    info_.joints[i].name, hardware_interface_names::VELOCITY, &(joint_states_[i].velocity_)));
             }
-            else if(state_interface.name == hardware_interface::EFFORT)
+            else if(state_interface.name == hardware_interface_names::EFFORT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::EFFORT, &(joint_states_[i].torque_)));
-            }
-
-            if(state_interface.name == hardware_interface::MOTOR_POSITION)
-            {
-                state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::MOTOR_POSITION, &(controller_states_[i].position_)));
-            }
-            else if(state_interface.name == hardware_interface::MOTOR_VELOCITY)
-            {
-                state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::MOTOR_VELOCITY, &(controller_states_[i].velocity_)));
-            }
-            else if(state_interface.name == hardware_interface::MOTOR_EFFORT)
-            {
-                state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::MOTOR_EFFORT, &(controller_states_[i].torque_)));
+                    info_.joints[i].name, hardware_interface_names::EFFORT, &(joint_states_[i].torque_)));
             }
 
-            else if(state_interface.name == hardware_interface::TEMPERATURE)
+            if(state_interface.name == hardware_interface_names::MOTOR_POSITION)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::TEMPERATURE, &(controller_diagnostics_[i].temperature_)));
+                    info_.joints[i].name, hardware_interface_names::MOTOR_POSITION, &(controller_states_[i].position_)));
             }
-            else if(state_interface.name == hardware_interface::VOLTAGE)
+            else if(state_interface.name == hardware_interface_names::MOTOR_VELOCITY)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::VOLTAGE, &(controller_diagnostics_[i].voltage_)));
+                    info_.joints[i].name, hardware_interface_names::MOTOR_VELOCITY, &(controller_states_[i].velocity_)));
             }
-            else if(state_interface.name == hardware_interface::POWER)
+            else if(state_interface.name == hardware_interface_names::MOTOR_EFFORT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::POWER, &(controller_diagnostics_[i].power_)));
-            }
-            else if(state_interface.name == hardware_interface::CURRENT)
-            {
-                state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::CURRENT, &(controller_diagnostics_[i].current_)));
-            }
-            else if(state_interface.name == hardware_interface::FAULT)
-            {
-                state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::FAULT, &(controller_diagnostics_[i].fault_)));
+                    info_.joints[i].name, hardware_interface_names::MOTOR_EFFORT, &(controller_states_[i].torque_)));
             }
 
-            else if(state_interface.name == hardware_interface::POSITION_ERROR)
+            else if(state_interface.name == hardware_interface_names::TEMPERATURE)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::POSITION_ERROR, &(additional_diagnostics_[i].position_error_)));
+                    info_.joints[i].name, hardware_interface_names::TEMPERATURE, &(controller_diagnostics_[i].temperature_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::VELOCITY_ERROR)
+            else if(state_interface.name == hardware_interface_names::VOLTAGE)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::VELOCITY_ERROR, &(additional_diagnostics_[i].velocity_error_)));
+                    info_.joints[i].name, hardware_interface_names::VOLTAGE, &(controller_diagnostics_[i].voltage_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::DESIRED_POSITION)
+            else if(state_interface.name == hardware_interface_names::POWER)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::DESIRED_POSITION, &(additional_diagnostics_[i].desired_position_)));
+                    info_.joints[i].name, hardware_interface_names::POWER, &(controller_diagnostics_[i].power_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::DESIRED_VELOCITY)
+            else if(state_interface.name == hardware_interface_names::CURRENT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::DESIRED_VELOCITY, &(additional_diagnostics_[i].desired_velocity_)));
+                    info_.joints[i].name, hardware_interface_names::CURRENT, &(controller_diagnostics_[i].current_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::DESIRED_EFFORT)
+            else if(state_interface.name == hardware_interface_names::FAULT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::DESIRED_EFFORT, &(additional_diagnostics_[i].desired_effort_)));
+                    info_.joints[i].name, hardware_interface_names::FAULT, &(controller_diagnostics_[i].fault_)));
             }
 
-            else if(state_interface.name == hardware_interface::MOTOR_POSITION_ERROR)
+            else if(state_interface.name == hardware_interface_names::POSITION_ERROR)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::MOTOR_POSITION_ERROR, &(additional_diagnostics_[i].motor_position_error_)));
+                    info_.joints[i].name, hardware_interface_names::POSITION_ERROR, &(additional_diagnostics_[i].position_error_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::MOTOR_VELOCITY_ERROR)
+            else if(state_interface.name == hardware_interface_names::VELOCITY_ERROR)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::MOTOR_VELOCITY_ERROR, &(additional_diagnostics_[i].motor_velocity_error_)));
+                    info_.joints[i].name, hardware_interface_names::VELOCITY_ERROR, &(additional_diagnostics_[i].velocity_error_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::MOTOR_DESIRED_POSITION)
+            else if(state_interface.name == hardware_interface_names::DESIRED_POSITION)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::MOTOR_DESIRED_POSITION, &(additional_diagnostics_[i].motor_desired_position_)));
+                    info_.joints[i].name, hardware_interface_names::DESIRED_POSITION, &(additional_diagnostics_[i].desired_position_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::MOTOR_DESIRED_VELOCITY)
+            else if(state_interface.name == hardware_interface_names::DESIRED_VELOCITY)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::MOTOR_DESIRED_VELOCITY, &(additional_diagnostics_[i].motor_desired_velocity_)));
+                    info_.joints[i].name, hardware_interface_names::DESIRED_VELOCITY, &(additional_diagnostics_[i].desired_velocity_)));
             }
-            else if(state_interface.name == hardware_interface::hardware_interface::MOTOR_DESIRED_EFFORT)
+            else if(state_interface.name == hardware_interface_names::DESIRED_EFFORT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
-                    info_.joints[i].name, hardware_interface::hardware_interface::MOTOR_DESIRED_EFFORT, &(additional_diagnostics_[i].motor_desired_effort_)));
+                    info_.joints[i].name, hardware_interface_names::DESIRED_EFFORT, &(additional_diagnostics_[i].desired_effort_)));
+            }
+
+            else if(state_interface.name == hardware_interface_names::MOTOR_POSITION_ERROR)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MOTOR_POSITION_ERROR, &(additional_diagnostics_[i].motor_position_error_)));
+            }
+            else if(state_interface.name == hardware_interface_names::MOTOR_VELOCITY_ERROR)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MOTOR_VELOCITY_ERROR, &(additional_diagnostics_[i].motor_velocity_error_)));
+            }
+            else if(state_interface.name == hardware_interface_names::MOTOR_DESIRED_POSITION)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MOTOR_DESIRED_POSITION, &(additional_diagnostics_[i].motor_desired_position_)));
+            }
+            else if(state_interface.name == hardware_interface_names::MOTOR_DESIRED_VELOCITY)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MOTOR_DESIRED_VELOCITY, &(additional_diagnostics_[i].motor_desired_velocity_)));
+            }
+            else if(state_interface.name == hardware_interface_names::MOTOR_DESIRED_EFFORT)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MOTOR_DESIRED_EFFORT, &(additional_diagnostics_[i].motor_desired_effort_)));
             }
 
             else
@@ -608,37 +608,37 @@ void Pi3HatHardwareInterface::controller_to_joint_transform()
 /* TRANSMISSION FUNCTIONS */
 void Pi3HatHardwareInterface::append_joint_handles(std::vector<transmission_interface::JointHandle>& joint_handles, const std::string joint_name, const int joint_index)
 {
-    transmission_interface::JointHandle joint_handle_position(joint_name, hardware_interface::POSITION, 
+    transmission_interface::JointHandle joint_handle_position(joint_name, hardware_interface_names::POSITION, 
      &joint_transmission_passthrough_[joint_index].position_);
     joint_handles.push_back(joint_handle_position);
 
-    transmission_interface::JointHandle joint_handle_velocity(joint_name, hardware_interface::VELOCITY, 
+    transmission_interface::JointHandle joint_handle_velocity(joint_name, hardware_interface_names::VELOCITY, 
      &joint_transmission_passthrough_[joint_index].velocity_);
     joint_handles.push_back(joint_handle_velocity);
 
-    transmission_interface::JointHandle joint_handle_torque(joint_name, hardware_interface::EFFORT,
+    transmission_interface::JointHandle joint_handle_torque(joint_name, hardware_interface_names::EFFORT,
      &joint_transmission_passthrough_[joint_index].torque_);
     joint_handles.push_back(joint_handle_torque);
 }
 
 void Pi3HatHardwareInterface::append_actuator_handles(std::vector<transmission_interface::ActuatorHandle>& actuator_handles, const std::string actuator_name, const int actuator_index)
 {
-    transmission_interface::ActuatorHandle actuator_handle_position(actuator_name, hardware_interface::POSITION,
+    transmission_interface::ActuatorHandle actuator_handle_position(actuator_name, hardware_interface_names::POSITION,
      &controller_transmission_passthrough_[actuator_index].position_);
     actuator_handles.push_back(actuator_handle_position);
 
-    transmission_interface::ActuatorHandle actuator_handle_velocity(actuator_name, hardware_interface::VELOCITY, 
+    transmission_interface::ActuatorHandle actuator_handle_velocity(actuator_name, hardware_interface_names::VELOCITY, 
      &controller_transmission_passthrough_[actuator_index].velocity_);
     actuator_handles.push_back(actuator_handle_velocity);
 
-    transmission_interface::ActuatorHandle actuator_handle_torque(actuator_name, hardware_interface::EFFORT,
+    transmission_interface::ActuatorHandle actuator_handle_torque(actuator_name, hardware_interface_names::EFFORT,
      &controller_transmission_passthrough_[actuator_index].torque_);
     actuator_handles.push_back(actuator_handle_torque);
 }
 
 
 void Pi3HatHardwareInterface::load_transmission_data(const hardware_interface::TransmissionInfo& transmission_info, 
-        transmission_interface::TransmissionSharedPtr& transmission, transmission_interface::TransmissionLoader& loader)
+    transmission_interface::TransmissionSharedPtr& transmission, transmission_interface::TransmissionLoader& loader)
 {
     try
     {

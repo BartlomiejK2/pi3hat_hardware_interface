@@ -77,7 +77,7 @@ namespace controller_interface
     };
 
     /* Const expressions for all command and state interfaces */ 
-    namespace hardware_interface
+    namespace hardware_interface_names
     {
         /* Main joint command and state hardware interfaces */
         constexpr char POSITION[]       = "position";
