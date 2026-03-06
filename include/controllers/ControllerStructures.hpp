@@ -87,12 +87,12 @@ namespace controller_interface
         /* Main motor state hardware interfaces */
         constexpr char MOTOR_POSITION[] = "motor_position";
         constexpr char MOTOR_VELOCITY[] = "motor_velocity";
-        constexpr char MOTOR_EFFORT[]   = "motor_velocity";
+        constexpr char MOTOR_EFFORT[]   = "motor_effort";
 
         /* Diagnostic controller state hardware interface */
         constexpr char TEMPERATURE[]    = "temperature";
         constexpr char VOLTAGE[]        = "voltage";
-        constexpr char CURRENT[]        = "power";
+        constexpr char CURRENT[]        = "current";
         constexpr char POWER[]          = "power";
         constexpr char FAULT[]          = "fault";
         
