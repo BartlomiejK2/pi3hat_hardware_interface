@@ -105,6 +105,13 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     command_format.velocity_limit= mjbots::moteus::kFloat;
     moteus_options.position_format = command_format;
 
+    /* Moteus query format (it will be copied to wrapper) */
+    mjbots::moteus::Query::Format query_format;
+    query_format.power = mjbots::moteus::kFloat;
+    query_format.d_current = mjbots::moteus::kFloat;
+    query_format.q_current = mjbots::moteus::kFloat;
+    moteus_options.query_format = query_format;
+
     /* Moteus command (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Command moteus_command;
     moteus_command.maximum_torque = params.torque_max_;
