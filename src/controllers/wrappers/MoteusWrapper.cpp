@@ -13,6 +13,8 @@
 
 #include "controllers/wrappers/MoteusWrapper.hpp"
 
+#include <algorithm>
+
 using namespace controller_interface;
 
 MoteusWrapper::MoteusWrapper(
@@ -89,7 +91,9 @@ int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
     return ((rx_frame.id>> 8) & 0x7f);
 }
 
-std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const ControllerParameters& params)
+std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const ControllerParameters& params, 
+    const std::vector<std::string>& command_interfaces, 
+    const std::vector<std::string>& state_interfaces)
 {
     /* Moteus options */ 
     using mjbots::moteus::Controller;
@@ -100,16 +104,119 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
 
     /* Moteus command format (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Format command_format;
-    command_format.feedforward_torque = mjbots::moteus::kFloat;
+
+    for(const auto& command_interface: command_interfaces)
+    {
+        if(command_interface == hardware_interface_names::POSITION)
+        {
+            command_format.position = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            command_format.position = mjbots::moteus::kIgnore;
+        }
+
+        if(command_interface == hardware_interface_names::VELOCITY)
+        {
+            command_format.velocity = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            command_format.velocity = mjbots::moteus::kIgnore;
+        }
+
+        if(command_interface == hardware_interface_names::EFFORT)
+        {
+            command_format.feedforward_torque = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            command_format.feedforward_torque= mjbots::moteus::kIgnore;
+        }
+    }
     command_format.maximum_torque = mjbots::moteus::kFloat;
-    command_format.velocity_limit= mjbots::moteus::kFloat;
+    command_format.velocity_limit = mjbots::moteus::kFloat;
     moteus_options.position_format = command_format;
 
     /* Moteus query format (it will be copied to wrapper) */
+    
     mjbots::moteus::Query::Format query_format;
-    query_format.power = mjbots::moteus::kFloat;
-    query_format.d_current = mjbots::moteus::kFloat;
-    query_format.q_current = mjbots::moteus::kFloat;
+    for(const auto& state_interface: state_interfaces)
+    {
+        if(state_interface == hardware_interface_names::POSITION)
+        {
+            query_format.position = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            query_format.position = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::VELOCITY)
+        {
+            query_format.velocity = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            query_format.velocity = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::EFFORT)
+        {
+            query_format.torque = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            query_format.torque = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::FAULT)
+        {
+            query_format.fault = mjbots::moteus::kInt8;
+        }
+        else
+        {
+            query_format.fault = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::CURRENT)
+        {
+            query_format.d_current = mjbots::moteus::kFloat;
+            query_format.q_current = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            query_format.d_current = mjbots::moteus::kIgnore;
+            query_format.q_current = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::TEMPERATURE)
+        {
+            query_format.temperature = mjbots::moteus::kInt8;
+        }
+        else
+        {
+            query_format.temperature = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::VOLTAGE)
+        {
+            query_format.voltage = mjbots::moteus::kInt8;
+        }
+        else
+        {
+            query_format.voltage = mjbots::moteus::kIgnore;
+        }
+
+        if(state_interface == hardware_interface_names::POWER)
+        {
+            query_format.power = mjbots::moteus::kFloat;
+        }
+        else
+        {
+            query_format.power = mjbots::moteus::kIgnore;
+        }
+    }
     moteus_options.query_format = query_format;
 
     /* Moteus command (it will be copied to wrapper) */

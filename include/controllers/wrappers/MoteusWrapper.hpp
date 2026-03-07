@@ -52,7 +52,9 @@ class MoteusWrapper final: public ControllerWrapper
 
 /* Copying for Moteus class is deleted, prevents from making constructor for MoteusWrapper 
    with only ControllerParameter as argument :/ */
-std::unique_ptr<MoteusWrapper> make_moteus_wrapper(const ControllerParameters& params);
+std::unique_ptr<MoteusWrapper> make_moteus_wrapper(const ControllerParameters& params, 
+    const std::vector<std::string>& command_interfaces, 
+    const std::vector<std::string>& state_interfaces);
 
 };
 

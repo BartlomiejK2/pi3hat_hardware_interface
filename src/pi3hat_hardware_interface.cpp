@@ -43,7 +43,7 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
     additional_diagnostics_.resize(joint_controller_number_);
 
     /* Prepare controller bridges */
-    for (const hardware_interface::ComponentInfo &joint : info_.joints)
+    for (const hardware_interface::ComponentInfo& joint : info_.joints)
     {
         controller_interface::ControllerParameters params;
         std::string wrapper_type;
@@ -60,7 +60,27 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_init(const hardwa
 
         try
         {
-            ControllerBridge controller_bridge(wrapper_type, params);
+            const auto& command_interfaces = joint.command_interfaces;
+            const auto& state_interfaces = joint.state_interfaces;
+
+            std::vector<std::string> command_interfaces_names;
+            command_interfaces_names.reserve(joint.command_interfaces.size());
+
+            std::vector<std::string> state_interfaces_names;
+            state_interfaces_names.reserve(joint.state_interfaces.size());
+
+            for(const auto& command_interface: command_interfaces)
+            {
+                command_interfaces_names.push_back(command_interface.name);
+            }
+
+            for(const auto& state_interface: state_interfaces)
+            {
+                state_interfaces_names.push_back(state_interface.name);
+            }
+
+            ControllerBridge controller_bridge(wrapper_type, params, 
+                command_interfaces_names, state_interfaces_names);
             controller_bridges_.push_back(std::move(controller_bridge));
         }
         catch(const std::exception& e)

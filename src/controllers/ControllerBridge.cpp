@@ -18,14 +18,16 @@ using mjbots::pi3hat::CanFrame;
 
 
 ControllerBridge::ControllerBridge(
-     std::string wrapper_type, 
-     const ControllerParameters& params): 
+        std::string wrapper_type, 
+        const ControllerParameters& params, 
+        const std::vector<std::string>& command_interfaces, 
+        const std::vector<std::string>& state_interfaces): 
      wrapper_(nullptr), params_(params)
 {
     /* Here add your wrapper type as std::string (use "else if" after this "if") */
     if(wrapper_type == "moteus")
     {
-         wrapper_ = make_moteus_wrapper(params);
+        wrapper_ = make_moteus_wrapper(params, command_interfaces, state_interfaces);
     }
 
     

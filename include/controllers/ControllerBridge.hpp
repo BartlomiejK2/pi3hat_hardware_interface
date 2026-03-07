@@ -38,7 +38,9 @@ class ControllerBridge
 
     public:
     ControllerBridge(std::string wrapper_type, 
-     const ControllerParameters& params);
+        const ControllerParameters& params, 
+        const std::vector<std::string>& command_interfaces, 
+        const std::vector<std::string>& state_interfaces);
 
     ControllerBridge(const ControllerBridge& other_controller) = delete;
     ControllerBridge& operator=(const ControllerBridge& other_controller) = delete;
