@@ -284,7 +284,6 @@ hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_activate(const rc
 
 hardware_interface::CallbackReturn Pi3HatHardwareInterface::on_deactivate(const rclcpp_lifecycle::State &previous_state)
 {
-    
     /* Lock motors in current place */
     RCLCPP_INFO(*logger_, "Motors reaching starting position!");
 
@@ -401,8 +400,7 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::EFFORT, &(joint_states_[i].torque_)));
             }
-
-            if(state_interface.name == hardware_interface_names::MOTOR_POSITION)
+            else if(state_interface.name == hardware_interface_names::MOTOR_POSITION)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::MOTOR_POSITION, &(controller_states_[i].position_)));
@@ -417,7 +415,6 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::MOTOR_EFFORT, &(controller_states_[i].torque_)));
             }
-
             else if(state_interface.name == hardware_interface_names::TEMPERATURE)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -443,7 +440,6 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::FAULT, &(controller_diagnostics_[i].fault_)));
             }
-
             else if(state_interface.name == hardware_interface_names::POSITION_ERROR)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -469,7 +465,6 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::DESIRED_EFFORT, &(additional_diagnostics_[i].desired_effort_)));
             }
-
             else if(state_interface.name == hardware_interface_names::MOTOR_POSITION_ERROR)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
@@ -495,7 +490,6 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::MOTOR_DESIRED_EFFORT, &(additional_diagnostics_[i].motor_desired_effort_)));
             }
-
             else
             {
                 RCLCPP_WARN(*logger_, "%s is wrong type of state interface, omitted!", state_interface.name.c_str());
