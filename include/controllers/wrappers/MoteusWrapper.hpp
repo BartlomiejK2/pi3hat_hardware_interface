@@ -43,7 +43,8 @@ class MoteusWrapper final: public ControllerWrapper
         const mjbots::moteus::PositionMode::Command& command);
     void command_to_tx_frame(CanFrame& tx_frame, const ControllerCommand& command) override;
     void query_to_tx_frame(CanFrame& tx_frame) override;
-    void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) override;
+    void rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state, 
+        ControllerDiagnostics& diagnostics) override;
     void init_to_tx_frame(CanFrame& tx_frame) override;
     int get_id_from_rx_frame(const CanFrame& rx_frame) override;
 
@@ -51,7 +52,9 @@ class MoteusWrapper final: public ControllerWrapper
 
 /* Copying for Moteus class is deleted, prevents from making constructor for MoteusWrapper 
    with only ControllerParameter as argument :/ */
-std::unique_ptr<MoteusWrapper> make_moteus_wrapper(const ControllerParameters& params);
+std::unique_ptr<MoteusWrapper> make_moteus_wrapper(const ControllerParameters& params, 
+    const std::vector<std::string>& command_interfaces, 
+    const std::vector<std::string>& state_interfaces);
 
 };
 

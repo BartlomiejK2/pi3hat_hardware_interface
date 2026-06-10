@@ -38,7 +38,9 @@ class ControllerBridge
 
     public:
     ControllerBridge(std::string wrapper_type, 
-     const ControllerParameters& params);
+        const ControllerParameters& params, 
+        const std::vector<std::string>& command_interfaces, 
+        const std::vector<std::string>& state_interfaces);
 
     ControllerBridge(const ControllerBridge& other_controller) = delete;
     ControllerBridge& operator=(const ControllerBridge& other_controller) = delete;
@@ -53,7 +55,8 @@ class ControllerBridge
     void make_query(CanFrame& tx_frame) const;
 
     /* Transform RX CAN frame to controller state */
-    void get_state(const CanFrame& rx_frame, ControllerState& state) const;
+    void get_state(const CanFrame& rx_frame, ControllerState& state, 
+        ControllerDiagnostics& diagnostics) const;
 
     /* Initialize controller */
     void initialize(CanFrame& tx_frame) const;

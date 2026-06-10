@@ -13,6 +13,8 @@
 
 #include "controllers/wrappers/MoteusWrapper.hpp"
 
+#include <algorithm>
+
 using namespace controller_interface;
 
 MoteusWrapper::MoteusWrapper(
@@ -53,7 +55,8 @@ void MoteusWrapper::query_to_tx_frame(CanFrame& tx_frame)
     std::memcpy(tx_frame.data, can_fd_frame.data, can_fd_frame.size);
 }
 
-void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state) 
+void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState& state, 
+    ControllerDiagnostics& diagnostics) 
 {
     /* Parse data from RX CANFD Pi3hat frame to Result object */
     if(((rx_frame.id >> 8) & 0x7f) != (uint32_t) moteus_controller_.options().id) return; /* This should not happen! (map frame to wrapper first) */
@@ -62,8 +65,12 @@ void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState&
     state.position_ = result.position * rotation_to_radians;
     state.velocity_ = result.velocity * rotation_to_radians;
     state.torque_ = result.torque;
-    state.temperature_ = result.temperature;
-    state.fault_ = static_cast<double>(result.fault);
+    diagnostics.mode_ = static_cast<double>(result.mode);
+    diagnostics.fault_ = static_cast<double>(result.fault);
+     diagnostics.temperature_ = result.temperature;
+    diagnostics.voltage_ = static_cast<double>(result.voltage);
+    diagnostics.power_ = result.power;
+    diagnostics.current_ = result.power / static_cast<double>(result.voltage);
 }
 
 void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame) 
@@ -84,7 +91,9 @@ int MoteusWrapper::get_id_from_rx_frame(const CanFrame& rx_frame)
     return ((rx_frame.id>> 8) & 0x7f);
 }
 
-std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const ControllerParameters& params)
+std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const ControllerParameters& params, 
+    const std::vector<std::string>& command_interfaces, 
+    const std::vector<std::string>& state_interfaces)
 {
     /* Moteus options */ 
     using mjbots::moteus::Controller;
@@ -95,10 +104,87 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
 
     /* Moteus command format (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Format command_format;
-    command_format.feedforward_torque = mjbots::moteus::kFloat;
+    command_format.position = mjbots::moteus::kIgnore;
+    command_format.velocity = mjbots::moteus::kIgnore;
+    command_format.feedforward_torque= mjbots::moteus::kIgnore;
+
+    for(const auto& command_interface: command_interfaces)
+    {
+        if(command_interface == hardware_interface_names::POSITION)
+        {
+            command_format.position = mjbots::moteus::kFloat;
+        }
+        else if(command_interface == hardware_interface_names::VELOCITY)
+        {
+            command_format.velocity = mjbots::moteus::kFloat;
+        }
+        else if(command_interface == hardware_interface_names::EFFORT)
+        {
+            command_format.feedforward_torque = mjbots::moteus::kFloat;
+        }
+    }
     command_format.maximum_torque = mjbots::moteus::kFloat;
-    command_format.velocity_limit= mjbots::moteus::kFloat;
+    command_format.velocity_limit = mjbots::moteus::kFloat;
     moteus_options.position_format = command_format;
+
+    /* Moteus query format (it will be copied to wrapper) */
+    
+    mjbots::moteus::Query::Format query_format;
+    query_format.position = mjbots::moteus::kIgnore;
+    query_format.velocity = mjbots::moteus::kIgnore;
+    query_format.torque = mjbots::moteus::kIgnore;
+    query_format.mode = mjbots::moteus::kIgnore;
+    query_format.fault = mjbots::moteus::kIgnore;
+    query_format.d_current = mjbots::moteus::kIgnore;
+    query_format.q_current = mjbots::moteus::kIgnore;
+    query_format.temperature = mjbots::moteus::kIgnore;
+    query_format.voltage = mjbots::moteus::kIgnore;
+    query_format.power = mjbots::moteus::kIgnore;
+
+    for(const auto& state_interface: state_interfaces)
+    {
+        if(state_interface == hardware_interface_names::POSITION)
+        {
+            query_format.position = mjbots::moteus::kFloat;
+        }
+        else if(state_interface == hardware_interface_names::VELOCITY)
+        {
+            query_format.velocity = mjbots::moteus::kFloat;
+        }
+        else if(state_interface == hardware_interface_names::EFFORT)
+        {
+            query_format.torque = mjbots::moteus::kFloat;
+        }
+        else if(state_interface == hardware_interface_names::MODE)
+        {
+            query_format.mode = mjbots::moteus::kInt8;
+        }
+        else if(state_interface == hardware_interface_names::FAULT)
+        {
+            query_format.fault = mjbots::moteus::kInt8;
+        }
+        else if(state_interface == hardware_interface_names::CURRENT)
+        {
+            // Not using this at the moment, current is given by power and voltage
+            // query_format.d_current = mjbots::moteus::kFloat;
+            // query_format.q_current = mjbots::moteus::kFloat;
+            query_format.voltage = mjbots::moteus::kInt8;
+            query_format.power = mjbots::moteus::kFloat;
+        }
+        else if(state_interface == hardware_interface_names::TEMPERATURE)
+        {
+            query_format.temperature = mjbots::moteus::kInt8;
+        }
+        else if(state_interface == hardware_interface_names::VOLTAGE)
+        {
+            query_format.voltage = mjbots::moteus::kInt8;
+        }
+        else if(state_interface == hardware_interface_names::POWER)
+        {
+            query_format.power = mjbots::moteus::kFloat;
+        }
+    }
+    moteus_options.query_format = query_format;
 
     /* Moteus command (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Command moteus_command;

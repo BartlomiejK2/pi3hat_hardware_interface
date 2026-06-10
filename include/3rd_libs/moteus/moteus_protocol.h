@@ -198,6 +198,11 @@ enum Register : uint16_t {
   kMillisecondCounter = 0x070,
   kClockTrim = 0x071,
 
+  kAux1PwmInputPeriod = 0x072,
+  kAux1PwmInputDutyCycle = 0x073,
+  kAux2PwmInputPeriod = 0x074,
+  kAux2PwmInputDutyCycle = 0x075,
+
   kAux1Pwm1 = 0x076,
   kAux1Pwm2 = 0x077,
   kAux1Pwm3 = 0x078,
@@ -308,6 +313,11 @@ struct Query {
     int8_t aux1_gpio = 0;
     int8_t aux2_gpio = 0;
 
+    int32_t aux1_pwm_input_period_us = 0;
+    float aux1_pwm_input_duty_cycle = 0.0f;
+    int32_t aux2_pwm_input_period_us = 0;
+    float aux2_pwm_input_duty_cycle = 0.0f;
+
     // Before gcc-12, initializating non-POD array types can be
     // painful if done in the idiomatic way with ={} inline.  Instead
     // we do it in the constructor.
@@ -341,6 +351,11 @@ struct Query {
 
     Resolution aux1_gpio = kIgnore;
     Resolution aux2_gpio = kIgnore;
+
+    Resolution aux1_pwm_input_period_us = kIgnore;
+    Resolution aux1_pwm_input_duty_cycle = kIgnore;
+    Resolution aux2_pwm_input_period_us = kIgnore;
+    Resolution aux2_pwm_input_duty_cycle = kIgnore;
 
     // Any values here must be sorted by register number.
     ItemFormat extra[kMaxExtra];
@@ -400,6 +415,23 @@ struct Query {
       const uint16_t kResolutionsSize = sizeof(kResolutions) / sizeof(*kResolutions);
       WriteCombiner combiner(
           frame, 0x10, Register::kAux1GpioStatus,
+          kResolutions, kResolutionsSize);
+      for (uint16_t i = 0; i < kResolutionsSize; i++) {
+        combiner.MaybeWrite();
+      }
+      reply_size += combiner.reply_size();
+    }
+
+    {
+      const Resolution kResolutions[] = {
+        format.aux1_pwm_input_period_us,
+        format.aux1_pwm_input_duty_cycle,
+        format.aux2_pwm_input_period_us,
+        format.aux2_pwm_input_duty_cycle,
+      };
+      const uint16_t kResolutionsSize = sizeof(kResolutions) / sizeof(*kResolutions);
+      WriteCombiner combiner(
+          frame, 0x10, Register::kAux1PwmInputPeriod,
           kResolutions, kResolutionsSize);
       for (uint16_t i = 0; i < kResolutionsSize; i++) {
         combiner.MaybeWrite();
@@ -545,6 +577,22 @@ struct Query {
         }
         case Register::kAux2GpioStatus: {
           result.aux2_gpio = parser->ReadInt(res);
+          break;
+        }
+        case Register::kAux1PwmInputPeriod: {
+          result.aux1_pwm_input_period_us = parser->ReadInt(res);
+          break;
+        }
+        case Register::kAux1PwmInputDutyCycle: {
+          result.aux1_pwm_input_duty_cycle = parser->ReadPwm(res);
+          break;
+        }
+        case Register::kAux2PwmInputPeriod: {
+          result.aux2_pwm_input_period_us = parser->ReadInt(res);
+          break;
+        }
+        case Register::kAux2PwmInputDutyCycle: {
+          result.aux2_pwm_input_duty_cycle = parser->ReadPwm(res);
           break;
         }
         default: {
@@ -1040,9 +1088,12 @@ struct CurrentMode {
     frame->Write<int8_t>(Register::kMode);
     frame->Write<int8_t>(Mode::kCurrent);
 
+    // Match the on-the-wire register order: kCommandQCurrent (0x1c)
+    // then kCommandDCurrent (0x1d).  The WriteCurrent calls below
+    // emit q_A then d_A; resolutions must align.
     const Resolution kResolutions[] = {
-      format.d_A,
       format.q_A,
+      format.d_A,
     };
 
     WriteCombiner combiner(
@@ -1397,6 +1448,57 @@ struct DiagnosticResponse {
   }
 };
 
+struct DiagnosticReadFlow {
+  struct Command {
+    int8_t channel = 1;
+    uint8_t packet_number = 0;
+    int8_t max_length = 48;
+  };
+
+  struct Format {};
+
+  static uint8_t Make(WriteCanData* frame, const Command& cmd, const Format&) {
+    frame->Write<int8_t>(Multiplex::kClientPollServerFlow);
+    frame->Write<int8_t>(cmd.channel);
+    frame->Write<int8_t>(static_cast<int8_t>(cmd.packet_number));
+    frame->Write<int8_t>(cmd.max_length);
+    return cmd.max_length + 4;
+  }
+};
+
+struct DiagnosticFlowResponse {
+  struct Result {
+    int8_t channel = -1;
+    uint8_t packet_number = 0;
+    uint8_t data[64] = {};
+    int8_t size = 0;
+  };
+
+  static Result Parse(const uint8_t* data, uint8_t size) {
+    MultiplexParser parser(data, size);
+    return Parse(&parser);
+  }
+
+  static Result Parse(MultiplexParser* parser) {
+    Result result;
+
+    if (parser->remaining() < 4) { return result; }
+
+    const auto action = parser->Read<int8_t>();
+    if (action != Multiplex::kServerToClientFlow) { return result; }
+    result.channel = parser->Read<int8_t>();
+    result.packet_number = parser->Read<uint8_t>();
+
+    const uint16_t size = parser->ReadVaruint();
+    if (parser->remaining() < size) { return result; }
+
+    result.size = size;
+    parser->ReadRaw(result.data, size);
+
+    return result;
+  }
+};
+
 struct ClockTrim {
   struct Command {
     int32_t trim = 0;
@@ -1443,16 +1545,16 @@ struct AuxPwmWrite {
                       const Command& command,
                       const Format& format) {
     const Resolution kResolutions[] = {
-      std::isfinite(command.aux1_pwm1) ? format.aux1_pwm1 : kIgnore,
-      std::isfinite(command.aux1_pwm2) ? format.aux1_pwm2 : kIgnore,
-      std::isfinite(command.aux1_pwm3) ? format.aux1_pwm3 : kIgnore,
-      std::isfinite(command.aux1_pwm4) ? format.aux1_pwm4 : kIgnore,
-      std::isfinite(command.aux1_pwm5) ? format.aux1_pwm5 : kIgnore,
-      std::isfinite(command.aux2_pwm1) ? format.aux2_pwm1 : kIgnore,
-      std::isfinite(command.aux2_pwm2) ? format.aux2_pwm2 : kIgnore,
-      std::isfinite(command.aux2_pwm3) ? format.aux2_pwm3 : kIgnore,
-      std::isfinite(command.aux2_pwm4) ? format.aux2_pwm4 : kIgnore,
-      std::isfinite(command.aux2_pwm5) ? format.aux2_pwm5 : kIgnore,
+      ::isfinite(command.aux1_pwm1) ? format.aux1_pwm1 : kIgnore,
+      ::isfinite(command.aux1_pwm2) ? format.aux1_pwm2 : kIgnore,
+      ::isfinite(command.aux1_pwm3) ? format.aux1_pwm3 : kIgnore,
+      ::isfinite(command.aux1_pwm4) ? format.aux1_pwm4 : kIgnore,
+      ::isfinite(command.aux1_pwm5) ? format.aux1_pwm5 : kIgnore,
+      ::isfinite(command.aux2_pwm1) ? format.aux2_pwm1 : kIgnore,
+      ::isfinite(command.aux2_pwm2) ? format.aux2_pwm2 : kIgnore,
+      ::isfinite(command.aux2_pwm3) ? format.aux2_pwm3 : kIgnore,
+      ::isfinite(command.aux2_pwm4) ? format.aux2_pwm4 : kIgnore,
+      ::isfinite(command.aux2_pwm5) ? format.aux2_pwm5 : kIgnore,
     };
 
     WriteCombiner combiner(

@@ -18,14 +18,16 @@ using mjbots::pi3hat::CanFrame;
 
 
 ControllerBridge::ControllerBridge(
-     std::string wrapper_type, 
-     const ControllerParameters& params): 
+        std::string wrapper_type, 
+        const ControllerParameters& params, 
+        const std::vector<std::string>& command_interfaces, 
+        const std::vector<std::string>& state_interfaces): 
      wrapper_(nullptr), params_(params)
 {
     /* Here add your wrapper type as std::string (use "else if" after this "if") */
     if(wrapper_type == "moteus")
     {
-         wrapper_ = make_moteus_wrapper(params);
+        wrapper_ = make_moteus_wrapper(params, command_interfaces, state_interfaces);
     }
 
     
@@ -69,9 +71,10 @@ void ControllerBridge::make_query(CanFrame& tx_frame) const
     wrapper_->query_to_tx_frame(tx_frame);
 }
 
-void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& state) const
+void ControllerBridge::get_state(const CanFrame& rx_frame, ControllerState& state, 
+    ControllerDiagnostics& diagnostics) const
 {
-    wrapper_->rx_frame_to_state(rx_frame, state);
+    wrapper_->rx_frame_to_state(rx_frame, state, diagnostics);
 
     /* Basic transformations after getting data from wrapper */
     state.position_ = params_.direction_ * (state.position_ - params_.position_offset_);
