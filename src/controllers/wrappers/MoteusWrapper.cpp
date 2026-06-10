@@ -122,11 +122,6 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
         {
             command_format.feedforward_torque = mjbots::moteus::kFloat;
         }
-        else
-        {
-            throw std::runtime_error("Wrong command interface: " + command_interface + " !");
-        }
-    
     }
     command_format.maximum_torque = mjbots::moteus::kFloat;
     command_format.velocity_limit = mjbots::moteus::kFloat;
@@ -187,10 +182,6 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
         else if(state_interface == hardware_interface_names::POWER)
         {
             query_format.power = mjbots::moteus::kFloat;
-        }
-        else
-        {
-            throw std::runtime_error("Wrong state interface: " + state_interface + " !");
         }
     }
     moteus_options.query_format = query_format;
