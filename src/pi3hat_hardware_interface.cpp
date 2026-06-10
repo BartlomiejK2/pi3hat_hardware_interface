@@ -435,6 +435,11 @@ std::vector<hardware_interface::StateInterface> Pi3HatHardwareInterface::export_
                 state_interfaces.emplace_back(hardware_interface::StateInterface(
                     info_.joints[i].name, hardware_interface_names::CURRENT, &(controller_diagnostics_[i].current_)));
             }
+            else if(state_interface.name == hardware_interface_names::MODE)
+            {
+                state_interfaces.emplace_back(hardware_interface::StateInterface(
+                    info_.joints[i].name, hardware_interface_names::MODE, &(controller_diagnostics_[i].mode_)));
+            }
             else if(state_interface.name == hardware_interface_names::FAULT)
             {
                 state_interfaces.emplace_back(hardware_interface::StateInterface(

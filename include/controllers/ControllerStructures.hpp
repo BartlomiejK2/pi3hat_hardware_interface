@@ -38,6 +38,7 @@ namespace controller_interface
     /* Structure for controller diagnotics */
     struct ControllerDiagnostics
     {
+        double mode_ = 0.0;         /* Mode flag */
         double temperature_ = 0.0;  /* [Celcius] */
         double voltage_ = 0.0;      /* [Volt] */
         double current_ = 0.0;      /* [Ampere] */
@@ -90,6 +91,7 @@ namespace controller_interface
         constexpr char MOTOR_EFFORT[]   = "motor_effort";
 
         /* Diagnostic controller state hardware interface */
+        constexpr char MODE[]           = "mode";
         constexpr char TEMPERATURE[]    = "temperature";
         constexpr char VOLTAGE[]        = "voltage";
         constexpr char CURRENT[]        = "current";

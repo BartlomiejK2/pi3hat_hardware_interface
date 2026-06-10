@@ -65,12 +65,12 @@ void MoteusWrapper::rx_frame_to_state(const CanFrame& rx_frame, ControllerState&
     state.position_ = result.position * rotation_to_radians;
     state.velocity_ = result.velocity * rotation_to_radians;
     state.torque_ = result.torque;
-    diagnostics.temperature_ = result.temperature;
+    diagnostics.mode_ = static_cast<double>(result.mode);
     diagnostics.fault_ = static_cast<double>(result.fault);
-    diagnostics.voltage_ = result.voltage;
+     diagnostics.temperature_ = result.temperature;
+    diagnostics.voltage_ = static_cast<double>(result.voltage);
     diagnostics.power_ = result.power;
-    diagnostics.current_ = std::sqrt(result.d_current * result.d_current 
-        + result.q_current * result.q_current);
+    diagnostics.current_ = result.power / static_cast<double>(result.voltage);
 }
 
 void MoteusWrapper::init_to_tx_frame(CanFrame& tx_frame) 
@@ -104,6 +104,9 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
 
     /* Moteus command format (it will be copied to wrapper) */
     mjbots::moteus::PositionMode::Format command_format;
+    command_format.position = mjbots::moteus::kIgnore;
+    command_format.velocity = mjbots::moteus::kIgnore;
+    command_format.feedforward_torque= mjbots::moteus::kIgnore;
 
     for(const auto& command_interface: command_interfaces)
     {
@@ -111,28 +114,19 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
         {
             command_format.position = mjbots::moteus::kFloat;
         }
-        else
-        {
-            command_format.position = mjbots::moteus::kIgnore;
-        }
-
-        if(command_interface == hardware_interface_names::VELOCITY)
+        else if(command_interface == hardware_interface_names::VELOCITY)
         {
             command_format.velocity = mjbots::moteus::kFloat;
         }
-        else
-        {
-            command_format.velocity = mjbots::moteus::kIgnore;
-        }
-
-        if(command_interface == hardware_interface_names::EFFORT)
+        else if(command_interface == hardware_interface_names::EFFORT)
         {
             command_format.feedforward_torque = mjbots::moteus::kFloat;
         }
         else
         {
-            command_format.feedforward_torque= mjbots::moteus::kIgnore;
+            throw std::runtime_error("Wrong command interface: " + command_interface + " !");
         }
+    
     }
     command_format.maximum_torque = mjbots::moteus::kFloat;
     command_format.velocity_limit = mjbots::moteus::kFloat;
@@ -141,80 +135,62 @@ std::unique_ptr<MoteusWrapper> controller_interface::make_moteus_wrapper(const C
     /* Moteus query format (it will be copied to wrapper) */
     
     mjbots::moteus::Query::Format query_format;
+    query_format.position = mjbots::moteus::kIgnore;
+    query_format.velocity = mjbots::moteus::kIgnore;
+    query_format.torque = mjbots::moteus::kIgnore;
+    query_format.mode = mjbots::moteus::kIgnore;
+    query_format.fault = mjbots::moteus::kIgnore;
+    query_format.d_current = mjbots::moteus::kIgnore;
+    query_format.q_current = mjbots::moteus::kIgnore;
+    query_format.temperature = mjbots::moteus::kIgnore;
+    query_format.voltage = mjbots::moteus::kIgnore;
+    query_format.power = mjbots::moteus::kIgnore;
+
     for(const auto& state_interface: state_interfaces)
     {
         if(state_interface == hardware_interface_names::POSITION)
         {
             query_format.position = mjbots::moteus::kFloat;
         }
-        else
-        {
-            query_format.position = mjbots::moteus::kIgnore;
-        }
-
-        if(state_interface == hardware_interface_names::VELOCITY)
+        else if(state_interface == hardware_interface_names::VELOCITY)
         {
             query_format.velocity = mjbots::moteus::kFloat;
         }
-        else
-        {
-            query_format.velocity = mjbots::moteus::kIgnore;
-        }
-
-        if(state_interface == hardware_interface_names::EFFORT)
+        else if(state_interface == hardware_interface_names::EFFORT)
         {
             query_format.torque = mjbots::moteus::kFloat;
         }
-        else
+        else if(state_interface == hardware_interface_names::MODE)
         {
-            query_format.torque = mjbots::moteus::kIgnore;
+            query_format.mode = mjbots::moteus::kInt8;
         }
-
-        if(state_interface == hardware_interface_names::FAULT)
+        else if(state_interface == hardware_interface_names::FAULT)
         {
             query_format.fault = mjbots::moteus::kInt8;
         }
-        else
+        else if(state_interface == hardware_interface_names::CURRENT)
         {
-            query_format.fault = mjbots::moteus::kIgnore;
+            // Not using this at the moment, current is given by power and voltage
+            // query_format.d_current = mjbots::moteus::kFloat;
+            // query_format.q_current = mjbots::moteus::kFloat;
+            query_format.voltage = mjbots::moteus::kInt8;
+            query_format.power = mjbots::moteus::kFloat;
         }
-
-        if(state_interface == hardware_interface_names::CURRENT)
-        {
-            query_format.d_current = mjbots::moteus::kFloat;
-            query_format.q_current = mjbots::moteus::kFloat;
-        }
-        else
-        {
-            query_format.d_current = mjbots::moteus::kIgnore;
-            query_format.q_current = mjbots::moteus::kIgnore;
-        }
-
-        if(state_interface == hardware_interface_names::TEMPERATURE)
+        else if(state_interface == hardware_interface_names::TEMPERATURE)
         {
             query_format.temperature = mjbots::moteus::kInt8;
         }
-        else
-        {
-            query_format.temperature = mjbots::moteus::kIgnore;
-        }
-
-        if(state_interface == hardware_interface_names::VOLTAGE)
+        else if(state_interface == hardware_interface_names::VOLTAGE)
         {
             query_format.voltage = mjbots::moteus::kInt8;
         }
-        else
-        {
-            query_format.voltage = mjbots::moteus::kIgnore;
-        }
-
-        if(state_interface == hardware_interface_names::POWER)
+        else if(state_interface == hardware_interface_names::POWER)
         {
             query_format.power = mjbots::moteus::kFloat;
         }
         else
         {
-            query_format.power = mjbots::moteus::kIgnore;
+            throw std::runtime_error("Wrong state interface: " + state_interface + " !");
         }
     }
     moteus_options.query_format = query_format;
