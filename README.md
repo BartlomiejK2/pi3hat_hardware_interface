@@ -24,6 +24,13 @@ for inspiration and making this work much more easier!
   -  motor_position [`radians`]
   -  motor_velocity [`radians/s`]
   -  motor_effort [`Nm`]
+- :ballot_box_with_check: 5 controller diagnostic state interfaces:
+  -  mode [`int`]
+  -  temperature [`Celcius`]
+  -  voltage [`Volts`]
+  -  current [`Ampere`]
+  -  power [`Wat`]
+  -  fault [`int`]
 - :ballot_box_with_check: 5 additonal joint state interfaces:
   -  desired_position [`radians`]
   -  desired_velocity [`radians/s`]
@@ -36,12 +43,6 @@ for inspiration and making this work much more easier!
   -  motor_desired_effort [`Nm`]
   -  motor_position_error [`radians`]
   -  motor_velocity_error [`radians/s`]
-- :ballot_box_with_check: 5 additonal diagnostic state interfaces:
-  -  temperature [`Celcius`]
-  -  voltage [`Volts`]
-  -  current [`Ampere`]
-  -  power [`Wat`]
-  -  fault [`int`]
 - :ballot_box_with_check: 10 IMU state interfaces (ready to use for [IMU Sensor Broadcaster](https://control.ros.org/master/doc/ros2_controllers/imu_sensor_broadcaster/doc/userdoc.html)):
   - orientation (`x`, `y`, `z` and `w`)
   - angular velocity (`x`, `y`, `z`) [`radians/s`]
